@@ -21,7 +21,7 @@ import { useAuth } from "@/lib/AuthContext";
 import TopBar from "./TopBar";
 import styles from "./MapComponent.module.css";
 
-export default function InteractiveMap() {
+export default function MapComponent() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -168,7 +168,7 @@ export default function InteractiveMap() {
   if (!isLoaded || !userLocation || !markerPosition || loading) return <div>Loading map...</div>;
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100vh" }}>
+    <div className={styles.mapContainer}>
       {(isLoading || placeDetails) && (
         <LocationOverlay
           isLoading={isLoading}
