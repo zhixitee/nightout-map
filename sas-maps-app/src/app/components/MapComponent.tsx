@@ -168,7 +168,7 @@ export default function InteractiveMap() {
   if (!isLoaded || !userLocation || !markerPosition || loading) return <div>Loading map...</div>;
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100vh" }}>
+    <div className={styles.mapContainer}>
       {(isLoading || placeDetails) && (
         <LocationOverlay
           isLoading={isLoading}
