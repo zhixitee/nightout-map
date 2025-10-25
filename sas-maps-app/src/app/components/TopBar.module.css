@@ -228,6 +228,24 @@
   cursor: not-allowed;
 }
 
+.menuItem {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background 0.2s;
+  text-align: left;
+}
+
+.menuItem:hover {
+  background: #f5f5f5;
+}
+
 .logoutItem {
   display: block;
   width: 100%;

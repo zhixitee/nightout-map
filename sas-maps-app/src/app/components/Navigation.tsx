@@ -29,11 +29,14 @@ export default function Navigation() {
         <div className={styles.userSection}>
           {user ? (
             <div className={styles.userMenu}>
-              <div className={styles.userAvatar}>
+              <Link href="/profile" className={styles.userAvatar}>
                 {user.email?.charAt(0).toUpperCase() || "U"}
-              </div>
+              </Link>
               <div className={styles.userDropdown}>
                 <div className={styles.userEmail}>{user.email}</div>
+                <Link href="/profile" className={styles.profileLink}>
+                  View Profile
+                </Link>
                 <button onClick={handleSignOut} className={styles.signOutButton}>
                   Sign Out
                 </button>
