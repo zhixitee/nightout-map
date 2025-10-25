@@ -1,24 +1,39 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  Marker,
+  useJsApiLoader,
+} from "@react-google-maps/api";
 import LocationOverlay from "./LocationOverlayComponent";
 
-export default function InteractiveMap() {
+export type PlaceDetails = {
+  name: string;
+  address: string;
+  photoUrl?: string;
+  rating?: number;
+  price_level?: number;
+  opening_hours?: google.maps.places.PlaceOpeningHours;
+};
+
+export default function MapComponent() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
 
-  const [isComponentOpen, setIsComponentOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
+  const [initialDetailsFetched, setInitialDetailsFetched] = useState(false);
 
-  
   useEffect(() => {
     if (!navigator.geolocation) {
       const fallback = { lat: 55, lng: 3 };
       setUserLocation(fallback);
       setMarkerPosition(fallback);
-      setIsComponentOpen(true); 
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const loc = {
@@ -27,78 +42,150 @@ export default function InteractiveMap() {
         };
         setUserLocation(loc);
         setMarkerPosition(loc);
-        setIsComponentOpen(true); 
       },
       () => {
         const fallback = { lat: 55, lng: 3 };
         setUserLocation(fallback);
         setMarkerPosition(fallback);
-        setIsComponentOpen(true); 
       }
     );
   }, []);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries: ["places"],
   });
 
-  
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      const newPos = e.latLng.toJSON();
-      setMarkerPosition(newPos);
-      setIsComponentOpen(true); 
-    }
-  }, []);
+  const fetchDetails = useCallback(
+    (latLng: google.maps.LatLng, placeId?: string) => {
+      if (!mapInstance) return;
 
-  const handleMarkerDragEnd = useCallback((e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      const newPos = e.latLng.toJSON();
-      setMarkerPosition(newPos);
-      setIsComponentOpen(true); 
-    }
-  }, []);
+      setIsLoading(true);
+      setPlaceDetails(null);
 
-  
+      const geocoder = new google.maps.Geocoder();
+      const placesService = new google.maps.places.PlacesService(mapInstance);
+
+      if (placeId) {
+        placesService.getDetails(
+          {
+            placeId: placeId,
+            fields: [
+              "name", "formatted_address", "photos", "geometry",
+              "rating", "opening_hours", "price_level"
+            ],
+          },
+          (result, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && result) {
+              const photoUrl =
+                result.photos && result.photos.length > 0
+                  ? result.photos[0].getUrl({ maxWidth: 400 })
+                  : undefined;
+              
+              setPlaceDetails({
+                name: result.name || "Location",
+                address: result.formatted_address || "Address not found",
+                photoUrl: photoUrl,
+                rating: result.rating,
+                price_level: result.price_level,
+                opening_hours: result.opening_hours,
+              });
+
+              if (result.geometry?.location) {
+                 setMarkerPosition(result.geometry.location.toJSON());
+              }
+            }
+            setIsLoading(false);
+          }
+        );
+      } else {
+        geocoder.geocode({ location: latLng }, (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            setPlaceDetails({
+              name: results[0].formatted_address,
+              address: results[0].formatted_address,
+              photoUrl: undefined,
+              rating: undefined,
+              price_level: undefined,
+              opening_hours: undefined,
+            });
+          }
+          setIsLoading(false);
+        });
+      }
+    },
+    [mapInstance]
+  );
+
+  useEffect(() => {
+    if (mapInstance && markerPosition && !initialDetailsFetched) {
+      setInitialDetailsFetched(true);
+      fetchDetails(
+        new google.maps.LatLng(markerPosition.lat, markerPosition.lng),
+        undefined
+      );
+    }
+  }, [mapInstance, markerPosition, initialDetailsFetched, fetchDetails]);
+
+  const handleMapClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (e.latLng) {
+        setMarkerPosition(e.latLng.toJSON());
+        fetchDetails(e.latLng, (e as any).placeId);
+      }
+    },
+    [fetchDetails]
+  );
+
+  const handleMarkerDragEnd = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (e.latLng) {
+        setMarkerPosition(e.latLng.toJSON());
+        fetchDetails(e.latLng, undefined);
+      }
+    },
+    [fetchDetails]
+  );
+
   const handleComponentClose = useCallback(() => {
-    setIsComponentOpen(false);
-  }, []);
-  
-  
-  const handleMarkerClick = useCallback(() => {
-     setIsComponentOpen(true); 
+    setPlaceDetails(null);
   }, []);
 
-  if (!isLoaded || !userLocation || !markerPosition) return <div>Loading map...</div>;
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    setMapInstance(map);
+  }, []);
+
+  if (!isLoaded || !userLocation) return <div>Loading map...</div>;
 
   return (
-    
-    <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
-      
-      {isComponentOpen && (
+    <div style={{ position: "relative", width: "100%", height: "100vh" }}>
+      {(isLoading || placeDetails) && (
         <LocationOverlay
-          location={markerPosition}
+          isLoading={isLoading}
+          details={placeDetails}
           onClose={handleComponentClose}
         />
       )}
 
-      
       <GoogleMap
         center={userLocation}
         zoom={12}
         mapContainerStyle={{ width: "100%", height: "100%" }}
         onClick={handleMapClick}
+        onLoad={onMapLoad}
         options={{
           gestureHandling: "auto",
           zoomControl: true,
+          clickableIcons: true,
         }}
       >
-        <Marker
-          position={markerPosition}
-          draggable={true}
-          onDragEnd={handleMarkerDragEnd}
-          onClick={handleMarkerClick}
-        />
+        {markerPosition && (
+          <Marker
+            position={markerPosition}
+            draggable={true}
+            onDragEnd={handleMarkerDragEnd}
+          />
+        )}
       </GoogleMap>
     </div>
   );
