@@ -1,1 +1,5 @@
 # nightout-map
+
+```
+npm install .
+```
