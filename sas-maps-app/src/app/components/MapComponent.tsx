@@ -17,7 +17,6 @@ export type PlaceDetails = {
   opening_hours?: google.maps.places.PlaceOpeningHours;
 };
 import { useRouter } from "next/navigation";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { useAuth } from "@/lib/AuthContext";
 import TopBar from "./TopBar";
 import styles from "./MapComponent.module.css";
@@ -164,7 +163,6 @@ export default function InteractiveMap() {
 
   const handleSearch = (query: string, lat: number, lng: number) => {
     setMarkerPosition({ lat, lng });
-    setMapZoom(15);
   };
 
   if (!isLoaded || !userLocation || !markerPosition || loading) return <div>Loading map...</div>;

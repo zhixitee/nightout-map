@@ -1,5 +1,5 @@
-import PublicMapComponent from "./components/PublicMapComponent";
+import MapComponent from "./components/MapComponent";
 
 export default function Home() {
-  return <PublicMapComponent />;
+  return <MapComponent />;
 }
