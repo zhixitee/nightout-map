@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
+import Link from "next/link";
 import styles from "./TopBar.module.css";
 
 interface TopBarProps {
@@ -143,17 +144,22 @@ export default function TopBar({ onSearch, userLocation }: TopBarProps) {
                 <div className={styles.divider} />
 
                 {user ? (
-                  <button onClick={handleLogout} className={styles.logoutItem}>
-                    🚪 Logout
-                  </button>
+                  <>
+                    <Link href="/profile" className={styles.menuItem}>
+                      👤 View Profile
+                    </Link>
+                    <button onClick={handleLogout} className={styles.logoutItem}>
+                      🚪 Logout
+                    </button>
+                  </>
                 ) : (
                   <>
-                    <a href="/auth/login" className={styles.menuItem}>
+                    <Link href="/auth/login" className={styles.menuItem}>
                       🔑 Sign In
-                    </a>
-                    <a href="/auth/signup" className={styles.menuItem}>
+                    </Link>
+                    <Link href="/auth/signup" className={styles.menuItem}>
                       ✍️ Sign Up
-                    </a>
+                    </Link>
                   </>
                 )}
               </div>
