@@ -1,10 +1,11 @@
-import Image from "next/image";
-import MapComponent from "./components/MapComponent";
+import PublicMapComponent from "./components/PublicMapComponent";
+import SignupPanel from "./components/SignupPanel";
 
 export default function Home() {
   return (
     <div>
-      <MapComponent />
+      <PublicMapComponent />
+      <SignupPanel />
     </div>
   );
 }

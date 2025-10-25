@@ -1,23 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
-import { useAuth } from "@/lib/AuthContext";
 import styles from "./MapComponent.module.css";
 
-export default function InteractiveMap() {
-  const { user, loading, signOut } = useAuth();
-  const router = useRouter();
+export default function PublicMapComponent() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/auth/login");
-    }
-  }, [user, loading, router]);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -66,40 +55,24 @@ export default function InteractiveMap() {
     }
   }, []);
 
-  if (!isLoaded || !userLocation || !markerPosition || loading) return <div>Loading map...</div>;
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/auth/login");
-  };
+  if (!isLoaded || !userLocation || !markerPosition) return <div>Loading map...</div>;
 
   return (
-    <div className={styles.mapContainer}>
-      <div className={styles.header}>
-        <h1>NightOut Map</h1>
-        <div className={styles.userInfo}>
-          <span>{user?.email}</span>
-          <button onClick={handleLogout} className={styles.logoutBtn}>
-            Logout
-          </button>
-        </div>
-      </div>
-      <GoogleMap
-        center={userLocation}
-        zoom={12}
-        mapContainerStyle={{ width: "100%", height: "calc(100vh - 60px)" }}
-        onClick={handleMapClick}
-        options={{
-          gestureHandling: "auto", 
-          zoomControl: true,        
-        }}
-      >
-        <Marker
-          position={markerPosition}
-          draggable={true}
-          onDragEnd={handleMarkerDragEnd}
-        />
-      </GoogleMap>
-    </div>
+    <GoogleMap
+      center={userLocation}
+      zoom={12}
+      mapContainerStyle={{ width: "100%", height: "100vh" }}
+      onClick={handleMapClick}
+      options={{
+        gestureHandling: "auto", 
+        zoomControl: true,        
+      }}
+    >
+      <Marker
+        position={markerPosition}
+        draggable={true}
+        onDragEnd={handleMarkerDragEnd}
+      />
+    </GoogleMap>
   );
 }
