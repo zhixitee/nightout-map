@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import styles from '../components/Navigation.module.css';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -7,7 +8,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-interface PlaceData {
+export interface PlaceData {
   place_id: string;
   name: string;
   address: string;
@@ -27,13 +28,15 @@ interface PlacesSearchProps {
   radius: number; 
   type: string;
   onPlacesFetched?: (places: PlaceData[]) => void;
+  onClose?: () => void;
 }
 
 const PlacesSearch: React.FC<PlacesSearchProps> = ({ 
   center, 
   radius, 
   type, 
-  onPlacesFetched 
+  onPlacesFetched,
+  onClose
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [results, setResults] = useState<PlaceData[]>([]);
@@ -159,7 +162,28 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   }
 
   return (
-    <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+    <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px', position: 'relative', backgroundColor: 'white' }}>
+      
+      {onClose && (
+        <button 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '10px',
+            background: 'transparent',
+            border: 'none',
+            fontSize: '24px',
+            lineHeight: '1',
+            cursor: 'pointer',
+            padding: '0 5px'
+          }}
+          aria-label="Close"
+        >
+          &times; 
+        </button>
+      )}
+      
       <h3>Search Places</h3>
       
       <div style={{ marginBottom: '15px' }}>
@@ -171,6 +195,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       <button 
         onClick={searchPlaces}
         disabled={isLoading}
+        className={styles.signupButton}
         style={{
           padding: '10px 20px',
           backgroundColor: isLoading ? '#ccc' : '#1976d2',
