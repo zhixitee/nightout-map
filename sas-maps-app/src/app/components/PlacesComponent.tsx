@@ -15,10 +15,11 @@ interface PlaceData {
   lng: number;
   types: string[];
   rating: number | null;
-  userRatingCount: number | null;
+  userratingcount: number | null;
+  websiteuri: string | null;
   url: string;
   phone: string | null;
-  websiteURI: string | null;
+
 }
 
 interface PlacesSearchProps {
@@ -50,10 +51,11 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
             lng: placeData.lng,
             types: placeData.types,
             rating: placeData.rating,
-            userRatingCount: placeData.userRatingCount,
+            userratingcount: placeData.userratingcount,
+            websiteuri: placeData.websiteuri,
             url: placeData.url,
             phone: placeData.phone,
-            websiteURI: placeData.websiteURI,
+           
           },
           {
             onConflict: 'place_id',
@@ -119,10 +121,11 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
             lng: place.location.lng() || 4.2583,
             types: place.types || [],
             rating: place.rating || null,
-            userRatingCount: place.userRatingCount || null,
+            userratingcount: place.userRatingCount || null,
             url: place.googleMapsURI || '',
+            websiteuri: place.websiteURI || null,
             phone: place.internationalPhoneNumber || null,
-            websiteURI: place.websiteURI || null
+
           };
 
           try {
@@ -202,7 +205,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
               >
                 <div><strong>{place.name}</strong></div>
                 <div>{place.address}</div>
-                <div>Rating: {place.rating || 'N/A'} ({place.userRatingCount || 0} reviews)</div>
+                <div>Rating: {place.rating || 'N/A'} ({place.userratingcount || 0} reviews)</div>
               </div>
             ))}
           </div>
