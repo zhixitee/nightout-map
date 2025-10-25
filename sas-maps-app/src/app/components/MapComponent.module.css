@@ -8,3 +8,44 @@
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.mapControls {
+  position: absolute;
+  top: 10px;
+  right: 60px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+}
+
+.mapButton {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mapButton:hover {
+  background: var(--control-bg);
+  transform: translateY(-1px);
+}
+
+.mapButton.active {
+  background: #4a90e2;
+  color: white;
+  border-color: #357abd;
+}
+
+.mapButton svg {
+  width: 16px;
+  height: 16px;
+}

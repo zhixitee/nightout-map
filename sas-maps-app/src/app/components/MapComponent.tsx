@@ -18,11 +18,13 @@ export type PlaceDetails = {
 };
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
+import { useTheme } from "@/lib/ThemeContext";
 import TopBar from "./TopBar";
 import styles from "./MapComponent.module.css";
 
 export default function MapComponent() {
   const { user, loading, signOut } = useAuth();
+  const { theme } = useTheme();
   const router = useRouter();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
@@ -31,6 +33,8 @@ export default function MapComponent() {
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [initialDetailsFetched, setInitialDetailsFetched] = useState(false);
+  const [trafficLayer, setTrafficLayer] = useState<google.maps.TrafficLayer | null>(null);
+  const [showTraffic, setShowTraffic] = useState(false);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -133,6 +137,13 @@ export default function MapComponent() {
     }
   }, [mapInstance, markerPosition, initialDetailsFetched, fetchDetails]);
 
+  // Handle traffic layer toggle
+  useEffect(() => {
+    if (trafficLayer && mapInstance) {
+      trafficLayer.setMap(showTraffic ? mapInstance : null);
+    }
+  }, [showTraffic, trafficLayer, mapInstance]);
+
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
       if (e.latLng) {
@@ -159,6 +170,8 @@ export default function MapComponent() {
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     setMapInstance(map);
+    const traffic = new google.maps.TrafficLayer();
+    setTrafficLayer(traffic);
   }, []);
 
   const handleSearch = (query: string, lat: number, lng: number) => {
@@ -177,6 +190,18 @@ export default function MapComponent() {
         />
       )}
 
+      <div className={styles.mapControls}>
+        <button
+          className={`${styles.mapButton} ${showTraffic ? styles.active : ''}`}
+          onClick={() => setShowTraffic(!showTraffic)}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          Traffic
+        </button>
+      </div>
+
       <GoogleMap
         center={userLocation}
         zoom={12}
@@ -187,6 +212,86 @@ export default function MapComponent() {
           gestureHandling: "auto",
           zoomControl: true,
           clickableIcons: true,
+          styles: theme === 'dark' ? [
+            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+            {
+              featureType: "administrative.locality",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563" }],
+            },
+            {
+              featureType: "poi",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563" }],
+            },
+            {
+              featureType: "poi.park",
+              elementType: "geometry",
+              stylers: [{ color: "#263c3f" }],
+            },
+            {
+              featureType: "poi.park",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#6b9a76" }],
+            },
+            {
+              featureType: "road",
+              elementType: "geometry",
+              stylers: [{ color: "#38414e" }],
+            },
+            {
+              featureType: "road",
+              elementType: "geometry.stroke",
+              stylers: [{ color: "#212a37" }],
+            },
+            {
+              featureType: "road",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#9ca5b3" }],
+            },
+            {
+              featureType: "road.highway",
+              elementType: "geometry",
+              stylers: [{ color: "#746855" }],
+            },
+            {
+              featureType: "road.highway",
+              elementType: "geometry.stroke",
+              stylers: [{ color: "#1f2835" }],
+            },
+            {
+              featureType: "road.highway",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#f3d19c" }],
+            },
+            {
+              featureType: "transit",
+              elementType: "geometry",
+              stylers: [{ color: "#2f3948" }],
+            },
+            {
+              featureType: "transit.station",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563" }],
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#17263c" }],
+            },
+            {
+              featureType: "water",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#515c6d" }],
+            },
+            {
+              featureType: "water",
+              elementType: "labels.text.stroke",
+              stylers: [{ color: "#17263c" }],
+            },
+          ] : undefined,
         }}
       >
         {markerPosition && (
