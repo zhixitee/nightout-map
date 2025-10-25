@@ -33,6 +33,8 @@ export default function MapComponent() {
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [initialDetailsFetched, setInitialDetailsFetched] = useState(false);
+  const [trafficLayer, setTrafficLayer] = useState<google.maps.TrafficLayer | null>(null);
+  const [showTraffic, setShowTraffic] = useState(false);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -135,6 +137,13 @@ export default function MapComponent() {
     }
   }, [mapInstance, markerPosition, initialDetailsFetched, fetchDetails]);
 
+  // Handle traffic layer toggle
+  useEffect(() => {
+    if (trafficLayer && mapInstance) {
+      trafficLayer.setMap(showTraffic ? mapInstance : null);
+    }
+  }, [showTraffic, trafficLayer, mapInstance]);
+
   const handleMapClick = useCallback(
     (e: google.maps.MapMouseEvent) => {
       if (e.latLng) {
@@ -161,6 +170,8 @@ export default function MapComponent() {
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     setMapInstance(map);
+    const traffic = new google.maps.TrafficLayer();
+    setTrafficLayer(traffic);
   }, []);
 
   const handleSearch = (query: string, lat: number, lng: number) => {
@@ -178,6 +189,18 @@ export default function MapComponent() {
           onClose={handleComponentClose}
         />
       )}
+
+      <div className={styles.mapControls}>
+        <button
+          className={`${styles.mapButton} ${showTraffic ? styles.active : ''}`}
+          onClick={() => setShowTraffic(!showTraffic)}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          Traffic
+        </button>
+      </div>
 
       <GoogleMap
         center={userLocation}
