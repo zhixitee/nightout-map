@@ -47,6 +47,7 @@
   border-radius: 6px;
   font-size: 1rem;
   transition: border-color 0.2s;
+  color: #000;
 }
 
 .formGroup input:focus {

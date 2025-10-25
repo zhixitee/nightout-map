@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { useAuth } from "@/lib/AuthContext";
+import TopBar from "./TopBar";
 import styles from "./MapComponent.module.css";
 
 export default function InteractiveMap() {
@@ -11,6 +12,7 @@ export default function InteractiveMap() {
   const router = useRouter();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapZoom, setMapZoom] = useState(12);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -66,28 +68,20 @@ export default function InteractiveMap() {
     }
   }, []);
 
-  if (!isLoaded || !userLocation || !markerPosition || loading) return <div>Loading map...</div>;
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/auth/login");
+  const handleSearch = (query: string, lat: number, lng: number) => {
+    setMarkerPosition({ lat, lng });
+    setMapZoom(15);
   };
+
+  if (!isLoaded || !userLocation || !markerPosition || loading) return <div>Loading map...</div>;
 
   return (
     <div className={styles.mapContainer}>
-      <div className={styles.header}>
-        <h1>NightOut Map</h1>
-        <div className={styles.userInfo}>
-          <span>{user?.email}</span>
-          <button onClick={handleLogout} className={styles.logoutBtn}>
-            Logout
-          </button>
-        </div>
-      </div>
+      <TopBar onSearch={handleSearch} userLocation={userLocation} />
       <GoogleMap
-        center={userLocation}
-        zoom={12}
-        mapContainerStyle={{ width: "100%", height: "calc(100vh - 60px)" }}
+        center={markerPosition}
+        zoom={mapZoom}
+        mapContainerStyle={{ width: "100%", height: "calc(100vh - 57px)" }}
         onClick={handleMapClick}
         options={{
           gestureHandling: "auto", 
