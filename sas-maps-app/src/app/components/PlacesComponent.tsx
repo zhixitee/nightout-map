@@ -15,10 +15,10 @@ interface PlaceData {
   lng: number;
   types: string[];
   rating: number | null;
-  user_ratings_total: number | null;
+  userRatingCount: number | null;
   url: string;
   phone: string | null;
-  website: string | null;
+  websiteURI: string | null;
 }
 
 interface PlacesSearchProps {
@@ -50,10 +50,10 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
             lng: placeData.lng,
             types: placeData.types,
             rating: placeData.rating,
-            user_ratings_total: placeData.user_ratings_total,
+            userRatingCount: placeData.userRatingCount,
             url: placeData.url,
             phone: placeData.phone,
-            website: placeData.website,
+            websiteURI: placeData.websiteURI,
           },
           {
             onConflict: 'place_id',
@@ -90,9 +90,9 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
           'googleMapsURI', 
           'types', 
           'rating', 
-          'userRatingsTotal', 
+          'userRatingCount', 
           'internationalPhoneNumber', 
-          'website',
+          'websiteURI',
           'id'
         ],
         locationRestriction: {
@@ -100,7 +100,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
           radius: radius,
         },
         includedPrimaryTypes: [type],
-        maxResultCount: 500,
+        maxResultCount: 20,
         rankPreference: SearchNearbyRankPreference.POPULARITY,
       };
 
@@ -119,10 +119,10 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
             lng: place.location.lng() || 4.2583,
             types: place.types || [],
             rating: place.rating || null,
-            user_ratings_total: place.rating || null,
+            userRatingCount: place.userRatingCount || null,
             url: place.googleMapsURI || '',
             phone: place.internationalPhoneNumber || null,
-            website: place.websiteURI || null
+            websiteURI: place.websiteURI || null
           };
 
           try {
@@ -202,7 +202,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
               >
                 <div><strong>{place.name}</strong></div>
                 <div>{place.address}</div>
-                <div>Rating: {place.rating || 'N/A'} ({place.user_ratings_total || 0} reviews)</div>
+                <div>Rating: {place.rating || 'N/A'} ({place.userRatingCount || 0} reviews)</div>
               </div>
             ))}
           </div>
