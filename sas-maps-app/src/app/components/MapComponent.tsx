@@ -21,7 +21,7 @@ import { useAuth } from "@/lib/AuthContext";
 import TopBar from "./TopBar";
 import styles from "./MapComponent.module.css";
 
-export default function InteractiveMap() {
+export default function MapComponent() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);

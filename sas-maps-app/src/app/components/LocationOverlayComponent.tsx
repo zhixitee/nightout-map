@@ -8,11 +8,11 @@ type Props = {
   onClose: () => void;
 };
 
-export default function MyCustomInfoBox({ isLoading, details, onClose }: Props) {
+export default function LocationOverlay({ isLoading, details, onClose }: Props) {
   return (
     <div style={{
       position: 'absolute',
-      top: '20px',
+      bottom: '20px',
       left: '20px',
       zIndex: 10,
       color: 'black',
@@ -22,7 +22,6 @@ export default function MyCustomInfoBox({ isLoading, details, onClose }: Props) 
       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
       width: '300px',
       maxHeight: 'calc(100vh - 40px)',
-      overflowY: 'auto',
     }}>
       
       
