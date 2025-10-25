@@ -31,21 +31,20 @@
 .profileName {
   margin: 0;
   font-size: 2rem;
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
 }
 
 .profileContent {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(139, 126, 116, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border: 1px solid rgba(139, 126, 116, 0.15);
+  border: 1px solid var(--card-border);
 }
 
 .profileSection {
   padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--card-border);
 }
 
 .profileSection:last-child {
@@ -55,7 +54,7 @@
 .profileSection h2 {
   margin: 0 0 1rem 0;
   font-size: 1.25rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .profileInfo {
@@ -69,30 +68,30 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem;
-  background: #f5f2ed;
+  background: var(--control-bg);
   border-radius: 6px;
-  border: 1px solid rgba(139, 126, 116, 0.1);
+  border: 1px solid var(--card-border);
 }
 
 .label {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
 .value {
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .preferencesList,
 .savedPlaces {
-  background: #f8f9fa;
+  background: var(--control-bg);
   border-radius: 6px;
   padding: 1rem;
 }
 
 .comingSoon {
-  color: #666;
+  color: var(--text-secondary);
   text-align: center;
   margin: 1rem 0;
   font-style: italic;
@@ -127,13 +126,13 @@
   justify-content: center;
   min-height: 50vh;
   gap: 1rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .loadingSpinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f3f3f3;
+  border: 3px solid var(--card-border);
   border-top: 3px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
