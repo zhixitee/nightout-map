@@ -1,41 +1,77 @@
 "use client";
 
-import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 
-export default function MapComponent() {
+export default function InteractiveMap() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setUserLocation({ lat: 50, lng: 50 });
+      const fallback = { lat: 55, lng: 3 };
+      setUserLocation(fallback);
+      setMarkerPosition(fallback);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setUserLocation({
+        const loc = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        });
+        };
+        setUserLocation(loc);
+        setMarkerPosition(loc);
       },
       () => {
-        setUserLocation({ lat: 50, lng: 50 });
+        const fallback = { lat: 55, lng: 3 };
+        setUserLocation(fallback);
+        setMarkerPosition(fallback);
       }
     );
   }, []);
 
-  if (!userLocation) return <div>Loading map...</div>;
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+  });
+
+  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      setMarkerPosition({
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng(),
+      });
+    }
+  }, []);
+
+  const handleMarkerDragEnd = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      setMarkerPosition({
+        lat: e.latLng.lat(),
+        lng: e.latLng.lng(),
+      });
+    }
+  }, []);
+
+  if (!isLoaded || !userLocation || !markerPosition) return <div>Loading map...</div>;
 
   return (
-    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}>
-      <Map
-        center={userLocation}
-        zoom={12}
-        style={{ width: "100%", height: "100vh" }}
-      >
-        <Marker position={userLocation} />
-      </Map>
-    </APIProvider>
+    <GoogleMap
+      center={userLocation}
+      zoom={12}
+      mapContainerStyle={{ width: "100%", height: "100vh" }}
+      onClick={handleMapClick}
+      options={{
+        gestureHandling: "auto", 
+        zoomControl: true,        
+      }}
+    >
+      <Marker
+        position={markerPosition}
+        draggable={true}
+        onDragEnd={handleMarkerDragEnd}
+      />
+    </GoogleMap>
   );
 }
