@@ -169,3 +169,13 @@
     padding: 1rem;
   }
 }
+.editPreferencesButton {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
