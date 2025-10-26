@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   GoogleMap,
   Marker,
-  useJsApiLoader,
   Circle,
 } from "@react-google-maps/api";
 import LocationOverlay from "./LocationOverlayComponent";
@@ -22,6 +21,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useTheme } from "@/lib/ThemeContext";
 import TopBar from "./TopBar";
 import styles from "./MapComponent.module.css";
+import { useGoogleMapsLoader } from "@/lib/useGoogleMapsLoader";
 
 interface MapComponentProps {
   center: { lat: number; lng: number } | null;
@@ -48,10 +48,25 @@ export default function MapComponent({
     useState<google.maps.TrafficLayer | null>(null);
   const [showTraffic, setShowTraffic] = useState(false);
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: ["places"],
-  });
+  const { isLoaded } = useGoogleMapsLoader();
+  const [colorScheme, setColorScheme] = useState<google.maps.ColorScheme | undefined>(undefined);
+  
+  const mapOptions = useMemo(() => {
+    const baseOptions = {
+      gestureHandling: "auto" as const,
+      zoomControl: true,
+      clickableIcons: true,
+    };
+
+    if (colorScheme) {
+      return {
+        ...baseOptions,
+        colorScheme,
+      };
+    }
+
+    return baseOptions;
+  }, [colorScheme]);
 
   const fetchDetails = useCallback(
     (latLng: google.maps.LatLng, placeId?: string) => {
@@ -172,6 +187,46 @@ export default function MapComponent({
     onMarkerPositionChange({ lat, lng });
   };
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadColorScheme() {
+      if (!isLoaded) {
+        return;
+      }
+
+      try {
+        const { ColorScheme } = (await google.maps.importLibrary("core")) as {
+          ColorScheme: typeof google.maps.ColorScheme;
+        };
+
+        if (!isMounted) {
+          return;
+        }
+
+        setColorScheme(theme === "dark" ? ColorScheme.DARK : ColorScheme.LIGHT);
+      } catch (error) {
+        console.error("Failed to load core library for color scheme:", error);
+      }
+    }
+
+    loadColorScheme();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoaded, theme]);
+
+  useEffect(() => {
+    if (!mapInstance || colorScheme === undefined) {
+      return;
+    }
+
+    mapInstance.setOptions({
+      colorScheme,
+    });
+  }, [mapInstance, colorScheme]);
+
   if (!isLoaded || !center || !markerPosition || loading)
     return <div>Loading map...</div>;
 
@@ -208,12 +263,7 @@ export default function MapComponent({
         mapContainerStyle={{ width: "100%", height: "100%" }}
         onClick={handleMapClick}
         onLoad={onMapLoad}
-        options={{
-          gestureHandling: "auto",
-          zoomControl: true,
-          clickableIcons: true,
-          styles: theme === "dark" ? [] : undefined,
-        }}
+        options={mapOptions}
       >
         {markerPosition && (
           <Marker

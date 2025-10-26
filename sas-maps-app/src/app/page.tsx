@@ -1,23 +1,15 @@
 "use client";
 import MapComponent from "./components/MapComponent";
-import PlacesSearch, { PlaceData } from "../app/components/PlacesComponent";
-import { useState, useEffect } from "react";
-import styles from "../app/components/Navigation.module.css";
+import { useEffect } from "react";
+import { useMapSearch } from "@/lib/MapSearchContext";
 
 export default function Home() {
-  const [showSearchUI, setShowSearchUI] = useState(false);
-
-  const [searchCenter, setSearchCenter] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [radius, setRadius] = useState(0);
-  const [selectedTypes, setSelectedTypes] = useState(["bar"]);
+  const { center, setCenter, radius } = useMapSearch();
 
   useEffect(() => {
     if (!navigator.geolocation) {
       const fallback = { lat: 55.862422, lng: -4.256248 };
-      setSearchCenter(fallback);
+      setCenter(fallback);
       return;
     }
 
@@ -27,68 +19,28 @@ export default function Home() {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
-        setSearchCenter(loc);
+        setCenter(loc);
       },
       () => {
         const fallback = { lat: 55.862422, lng: -4.256248 };
-        setSearchCenter(fallback);
+        setCenter(fallback);
       }
     );
-  }, []);
-
-  const handlePlacesFetched = (places: PlaceData[]) => {
-    console.log("Fetched places:", places);
-  };
-
-  const handlePlaceSelect = (place: PlaceData) => {
-    setSearchCenter({ lat: place.lat, lng: place.lng });
-  };
+  }, [setCenter]);
 
   return (
-    <div>
-      <div
-        style={{
-          position: "absolute",
-          top: 10,
-          left: 10,
-          zIndex: 1000,
-          background: "white",
-          padding: "10px",
-          borderRadius: "8px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-        }}
-      >
-        <button
-          onClick={() => setShowSearchUI(true)}
-          disabled={showSearchUI}
-          className={styles.signupButton}
-        >
-          Show Places Search
-        </button>
-
-        {showSearchUI && searchCenter && (
-          <PlacesSearch
-            center={searchCenter}
-            radius={radius}
-            type={selectedTypes}
-            onTypeChange={setSelectedTypes}
-            onPlacesFetched={handlePlacesFetched}
-            onClose={() => setShowSearchUI(false)}
-            onRadiusChange={setRadius}
-            onPlaceSelect={handlePlaceSelect}
-          />
-        )}
-      </div>
-
+    <main style={{ 
+      width: '100vw', 
+      height: '100vh', 
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
       <MapComponent
-        center={searchCenter}
-        markerPosition={searchCenter}
-        onMarkerPositionChange={setSearchCenter}
+        center={center}
+        markerPosition={center}
+        onMarkerPositionChange={setCenter}
         radius={radius}
       />
-    </div>
+    </main>
   );
 }

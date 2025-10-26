@@ -1,6 +1,8 @@
 import { useState } from "react";
-import styles from "../components/Navigation.module.css";
+import styles from "./PlacesComponent.module.css";
 import { supabase } from "@/lib/supabaseClient";
+import { useRoutePlanner } from "@/lib/RoutePlannerContext";
+import { useTheme } from "@/lib/ThemeContext";
 
 export interface PlaceData {
   place_id: string;
@@ -74,6 +76,8 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [results, setResults] = useState<PlaceData[]>([]);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const { addVenue, hasVenue } = useRoutePlanner();
+  const { theme } = useTheme();
 
   async function storePlaceInDatabase(placeData: PlaceData) {
     try {
@@ -223,7 +227,8 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   };
   const overlayContentStyles: React.CSSProperties = {
     position: "relative",
-    backgroundColor: "white",
+    backgroundColor: theme === 'dark' ? '#1e293b' : 'white',
+    color: theme === 'dark' ? '#e2e8f0' : '#0f172a',
     padding: "2rem",
     borderRadius: "8px",
     width: "90%",
@@ -233,8 +238,9 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
     overflowY: "auto",
   };
   const typeButtonStyles: React.CSSProperties = {
-    background: "#f0f0f0",
-    border: "1px solid #ccc",
+    background: theme === 'dark' ? '#334155' : '#f0f0f0',
+    border: `1px solid ${theme === 'dark' ? '#475569' : '#ccc'}`,
+    color: theme === 'dark' ? '#e2e8f0' : '#0f172a',
     borderRadius: "4px",
     padding: "8px 12px",
     margin: "4px",
@@ -243,17 +249,17 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   };
   const selectedTypeButtonStyles: React.CSSProperties = {
     ...typeButtonStyles,
-    background: "#1976d2",
+    background: "#667eea",
     color: "white",
-    borderColor: "#1976d2",
+    borderColor: "#667eea",
   };
   const radiusButtonStyle: React.CSSProperties = {
     width: "30px",
     height: "30px",
-    border: "1px solid #ccc",
+    border: `1px solid ${theme === 'dark' ? '#475569' : '#ccc'}`,
     borderRadius: "50%",
-    background: "#f9f9f9",
-    color: "#333",
+    background: theme === 'dark' ? '#334155' : '#f9f9f9',
+    color: theme === 'dark' ? '#e2e8f0' : '#333',
     fontSize: "18px",
     fontWeight: "bold",
     cursor: "pointer",
@@ -266,55 +272,35 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   const disabledRadiusButtonStyle: React.CSSProperties = {
     ...radiusButtonStyle,
     cursor: "not-allowed",
-    background: "#eee",
-    color: "#aaa",
+    background: theme === 'dark' ? '#1e293b' : '#eee',
+    color: theme === 'dark' ? '#64748b' : '#aaa',
   };
 
   return (
-    <div
-      style={{
-        padding: "20px",
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        position: "relative",
-        backgroundColor: "white",
-      }}
-    >
+    <div className={styles.container}>
       {onClose && (
         <button
           onClick={onClose}
-          style={{
-            position: "absolute",
-            top: "8px",
-            right: "10px",
-            background: "transparent",
-            border: "none",
-            fontSize: "24px",
-            lineHeight: "1",
-            cursor: "pointer",
-            padding: "0 5px",
-          }}
+          className={styles.closeButton}
           aria-label="Close"
         >
           &times;
         </button>
       )}
 
-      <h3>Search Places</h3>
+      <h3 className={styles.title}>Search Places</h3>
 
-      <div style={{ marginBottom: "15px" }}>
-        <div>
+      <div className={styles.searchControls}>
+        <div className={styles.locationInfo}>
           <strong>Location:</strong> {center.lat.toFixed(6)},{" "}
           {center.lng.toFixed(6)}
         </div>
 
-        <div style={{ fontSize: "14px", marginTop: "10px" }}>
-          <label
-            style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}
-          >
+        <div className={styles.radiusControl}>
+          <label className={styles.controlLabel}>
             Radius (km):
           </label>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div className={styles.radiusButtons}>
             <button
               type="button"
               onClick={() => handleRadiusChange(-1)}
@@ -347,30 +333,15 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
           </div>
         </div>
 
-        <div
-          style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
-        >
+        <div className={styles.typeControl}>
           <button
             onClick={() => setIsOverlayOpen(true)}
-            style={{
-              cursor: "pointer",
-              background: "grey",
-              color: "white",
-              border: "none",
-              borderRadius: "50%",
-              width: "24px",
-              height: "24px",
-              fontSize: "16px",
-              lineHeight: "22px",
-              textAlign: "center",
-              marginRight: "8px",
-              padding: 0,
-            }}
+            className={styles.typeButton}
             aria-label="Select type"
           >
             +
           </button>
-          <span>
+          <span className={styles.typeInfo}>
             Current Type(s): <strong>{type.join(", ")}</strong>
           </span>
         </div>
@@ -378,51 +349,57 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       <button
         onClick={searchPlaces}
         disabled={isLoading}
-        className={styles.signupButton}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: isLoading ? "#ccc" : "#1976d2",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: isLoading ? "not-allowed" : "pointer",
-          fontWeight: "bold",
-        }}
+        className={styles.searchButton}
       >
         {isLoading ? "Searching..." : "Search & Store Places"}
       </button>
 
       {isLoading && (
-        <div style={{ marginTop: "10px", color: "#666" }}>
+        <div className={styles.loadingMessage}>
           Searching for {type.join(", ")} places within{" "}
           {(radius / 1000).toFixed(1)}km radius...
         </div>
       )}
 
       {results.length > 0 && (
-        <div style={{ marginTop: "15px" }}>
-          <h4>Results ({results.length} places stored):</h4>
-          <div style={{ maxHeight: "200px", overflowY: "auto" }}>
-            {results.map((place, index) => (
+        <div className={styles.resultsSection}>
+          <h4 className={styles.resultsTitle}>Results ({results.length} places stored):</h4>
+          <div className={styles.resultsList}>
+            {results.map((place) => {
+              const alreadyAdded = hasVenue(place.place_id);
+
+              return (
               <div
                 key={place.place_id}
-                style={{
-                  padding: "8px",
-                  borderBottom: "1px solid #eee",
-                  fontSize: "14px",
-                }}
+                className={styles.resultItem}
                 onClick={() => onPlaceSelect && onPlaceSelect(place)}
               >
-                <div>
+                <div className={styles.placeName}>
                   <strong>{place.name}</strong>
                 </div>
-                <div>{place.address}</div>
-                <div>
+                <div className={styles.placeAddress}>{place.address}</div>
+                <div className={styles.placeRating}>
                   Rating: {place.rating || "N/A"} ({place.userratingcount || 0}{" "}
                   reviews)
                 </div>
+                  <div className={styles.addButtonWrapper}>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (!alreadyAdded) {
+                          addVenue(place);
+                        }
+                      }}
+                      className={`${styles.addButton} ${alreadyAdded ? styles.addedButton : ''}`}
+                      disabled={alreadyAdded}
+                    >
+                      {alreadyAdded ? "Added" : "Add to Night Out"}
+                    </button>
+                  </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -435,36 +412,23 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
           >
             <button
               onClick={() => setIsOverlayOpen(false)}
-              style={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                background: "transparent",
-                border: "none",
-                fontSize: "24px",
-                cursor: "pointer",
-              }}
+              className={styles.overlayCloseButton}
               aria-label="Close Overlay"
             >
               &times;
             </button>
 
-            <h2 style={{ marginTop: "0" }}>Select Types</h2>
-            <p>
+            <h2 className={styles.overlayTitle}>Select Types</h2>
+            <p className={styles.overlayCurrent}>
               Current: <strong>{type.join(", ") || "None"}</strong>
             </p>
 
             {Object.entries(typeCategories).map(([category, items]) => (
-              <div key={category} style={{ marginBottom: "15px" }}>
-                <h4
-                  style={{
-                    borderBottom: "1px solid #eee",
-                    paddingBottom: "5px",
-                  }}
-                >
+              <div key={category} className={styles.categorySection}>
+                <h4 className={styles.categoryTitle}>
                   {category}
                 </h4>
-                <div style={{ display: "flex", flexWrap: "wrap" }}>
+                <div className={styles.typeButtons}>
                   {items.map((item) => {
                     const isSelected = type.includes(item.value);
                     return (

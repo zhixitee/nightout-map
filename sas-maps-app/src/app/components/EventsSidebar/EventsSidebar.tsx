@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import styles from './EventsSidebar.module.css';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import EmailInvite from './EmailInvite';
 import { useRouter } from 'next/navigation';
+import { useRoutePlanner } from '@/lib/RoutePlannerContext';
+import RoutePreviewMap from './RoutePreviewMap';
+import PlacesSearch from '../PlacesComponent';
+import { useMapSearch } from '@/lib/MapSearchContext';
 
 interface Event {
   id: string;
@@ -29,31 +33,130 @@ interface Invite {
   status: 'pending' | 'accepted' | 'declined';
 }
 
+const initialFormState = {
+  title: '',
+  date: '',
+  location: '',
+  description: '',
+  maxParticipants: '',
+  linkExpiry: ''
+};
+
 export default function EventsSidebar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showInviteForm, setShowInviteForm] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    date: '',
-    location: '',
-    description: '',
-    maxParticipants: '',
-    linkExpiry: ''
-  });
+  const [formData, setFormData] = useState({ ...initialFormState });
   const [createStatus, setCreateStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [inviteStatus, setInviteStatus] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [locationTouched, setLocationTouched] = useState(false);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [eventStatus, setEventStatus] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
   const { user } = useAuth();
   const router = useRouter();
+  const { venues, removeVenue, clearVenues } = useRoutePlanner();
+  const [routeOrder, setRouteOrder] = useState<string[]>([]);
+  const { center, setCenter, radius, setRadius, selectedTypes, setSelectedTypes } = useMapSearch();
+
+  useEffect(() => {
+    setRouteOrder((current) => {
+      const placeIds = venues.map((venue) => venue.place_id);
+
+      if (placeIds.length === 0) {
+        return current.length === 0 ? current : [];
+      }
+
+      const filtered = current.filter((id) => placeIds.includes(id));
+
+      if (filtered.length === placeIds.length) {
+        return filtered;
+      }
+
+      const missing = placeIds.filter((id) => !filtered.includes(id));
+      return [...filtered, ...missing];
+    });
+  }, [venues]);
+
+  const orderedVenues = useMemo(() => {
+    if (routeOrder.length === venues.length && venues.length > 0) {
+      const venueMap = new Map(venues.map((venue) => [venue.place_id, venue]));
+      const mapped = routeOrder
+        .map((id) => venueMap.get(id))
+        .filter((value): value is typeof venues[number] => Boolean(value));
+
+      if (mapped.length === venues.length) {
+        return mapped;
+      }
+    }
+
+    return venues;
+  }, [routeOrder, venues]);
+
+  const handleRouteComputed = useCallback(
+    (orderedPlaceIds: string[]) => {
+      if (orderedPlaceIds.length === 0) {
+        return;
+      }
+
+      setRouteOrder(() => {
+        const uniqueOrderedIds = orderedPlaceIds.filter((id, index, arr) => arr.indexOf(id) === index);
+        const validIds = uniqueOrderedIds.filter((id) => venues.some((venue) => venue.place_id === id));
+
+        const missing = venues
+          .map((venue) => venue.place_id)
+          .filter((id) => !validIds.includes(id));
+
+        return [...validIds, ...missing];
+      });
+    },
+    [venues]
+  );
+
+  const hasOptimizedOrder = useMemo(() => {
+    if (venues.length < 2 || routeOrder.length !== venues.length) {
+      return false;
+    }
+
+    return routeOrder.some((id, index) => id !== venues[index].place_id);
+  }, [routeOrder, venues]);
 
   useEffect(() => {
     if (user) {
       fetchEvents();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (locationTouched) {
+      return;
+    }
+
+    if (orderedVenues.length === 0) {
+      setFormData((prev) => {
+        if (prev.location === '') {
+          return prev;
+        }
+        return { ...prev, location: '' };
+      });
+      return;
+    }
+
+    const autoLocation = orderedVenues
+      .map((venue, index) => {
+        const base = venue.address ? `${venue.name} • ${venue.address}` : venue.name;
+        return orderedVenues.length > 1 ? `Stop ${index + 1}: ${base}` : base;
+      })
+      .join('\n');
+
+    setFormData((prev) => {
+      if (prev.location === autoLocation) {
+        return prev;
+      }
+      return { ...prev, location: autoLocation };
+    });
+  }, [orderedVenues, locationTouched]);
 
   const fetchEvents = async () => {
     try {
@@ -117,19 +220,13 @@ export default function EventsSidebar() {
 
       if (data) {
         await fetchEvents(); // Refresh the events list
-        setShowCreateForm(false);
-        setFormData({
-          title: '',
-          date: '',
-          location: '',
-          description: '',
-          maxParticipants: '',
-          linkExpiry: ''
-        });
+        setFormData({ ...initialFormState });
         setSelectedEvent(data[0]);
         setInviteStatus(null);
+        setEventStatus(null);
         setShowInviteForm(true);
         setCreateStatus({ type: 'success', message: 'Event created! Invite your friends below.' });
+        setLocationTouched(false);
       }
     } catch (error) {
       console.error('Error creating event:', error);
@@ -223,6 +320,73 @@ export default function EventsSidebar() {
     }
   };
 
+  const handleCancelEvent = async (eventToCancel: Event) => {
+    if (!user) return;
+
+    if (!user.email) {
+      setEventStatus({ type: 'error', message: 'We need your account email to send cancellation notices.' });
+      return;
+    }
+
+    const confirmation = window.confirm(`Cancel "${eventToCancel.title}" and notify all invitees?`);
+    if (!confirmation) {
+      return;
+    }
+
+    try {
+      setEventStatus(null);
+      setDeletingEventId(eventToCancel.id);
+
+      const response = await fetch(`/api/events/${eventToCancel.id}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          hostId: user.id,
+          hostEmail: user.email,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok && response.status !== 207) {
+        throw new Error(result.message || 'Failed to cancel event.');
+      }
+
+      setEvents((prev) => prev.filter((item) => item.id !== eventToCancel.id));
+
+      if (selectedEvent?.id === eventToCancel.id) {
+        setSelectedEvent(null);
+        setShowInviteForm(false);
+        setInviteStatus(null);
+      }
+
+      if (response.status === 207) {
+        const failedEmails: string[] = Array.isArray(result.failedEmails) ? result.failedEmails : [];
+        const message = result.message
+          || (failedEmails.length > 0
+            ? `Event cancelled, but we could not email: ${failedEmails.join(', ')}`
+            : 'Event cancelled with some warnings.');
+
+        setEventStatus({
+          type: 'warning',
+          message,
+        });
+      } else {
+        setEventStatus({
+          type: 'success',
+          message: result.message || 'Event cancelled and all invitees notified.',
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to cancel event. Please try again.';
+      setEventStatus({ type: 'error', message });
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
+
   return (
     <div className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
       <button 
@@ -256,61 +420,96 @@ export default function EventsSidebar() {
                 {createStatus.message}
               </div>
             )}
-            <button 
-              className={styles.createButton}
-              onClick={() => {
-                setShowCreateForm(true);
-                setShowInviteForm(false);
-                setInviteStatus(null);
-              }}
-              disabled={showCreateForm || isSubmitting}
-            >
-              Create New Event
-            </button>
+            <div className={styles.createForm}>
+              <div className={styles.formHeader}>
+                <h3>Create Night Out</h3>
+                <p>Set the details and build your perfect route below.</p>
+              </div>
 
-            {showCreateForm && (
-              <form onSubmit={handleCreateEvent} className={styles.createForm}>
-                <input
-                  type="text"
-                  placeholder="Event Title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  required
-                />
-                <input
-                  type="datetime-local"
-                  value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  required
-                />
-                <textarea
-                  placeholder="Description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  required
-                />
-                <input
-                  type="number"
-                  placeholder="Max Participants"
-                  value={formData.maxParticipants}
-                  onChange={(e) => setFormData({...formData, maxParticipants: e.target.value })}
-                  required
-                  min="1"
-                />
-                <input
-                  type="datetime-local"
-                  placeholder="Link Expiry"
-                  value={formData.linkExpiry}
-                  onChange={(e) => setFormData({...formData, linkExpiry: e.target.value})}
-                  required
-                />
+              <div className={styles.placeSearchPanel}>
+                <div className={styles.placeSearchHeader}>
+                  <h4>Find Venues Nearby</h4>
+                  <p>Search and add stops to auto-fill your itinerary.</p>
+                </div>
+                {center ? (
+                  <PlacesSearch
+                    center={center}
+                    radius={radius}
+                    type={selectedTypes}
+                    onRadiusChange={setRadius}
+                    onTypeChange={setSelectedTypes}
+                    onPlaceSelect={(place) => setCenter({ lat: place.lat, lng: place.lng })}
+                  />
+                ) : (
+                  <div className={styles.emptyRouteMessage}>
+                    Getting your location… try searching again in a moment.
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleCreateEvent} className={styles.eventForm}>
+                <label className={styles.fieldGroup}>
+                  <span>Title</span>
+                  <input
+                    type="text"
+                    placeholder="Night out name"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </label>
+                <label className={styles.fieldGroup}>
+                  <span>Date & Time</span>
+                  <input
+                    type="datetime-local"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    required
+                  />
+                </label>
+                <label className={styles.fieldGroup}>
+                  <span>Locations</span>
+                  <textarea
+                    placeholder="Stops will appear here as you add venues"
+                    value={formData.location}
+                    onChange={(e) => {
+                      setLocationTouched(true);
+                      setFormData({ ...formData, location: e.target.value });
+                    }}
+                    required
+                  />
+                </label>
+                <label className={styles.fieldGroup}>
+                  <span>Plan Notes</span>
+                  <textarea
+                    placeholder="Share the vibe, meeting point, or dress code"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    required
+                  />
+                </label>
+                <div className={styles.fieldRow}>
+                  <label className={styles.fieldGroup}>
+                    <span>Max Guests</span>
+                    <input
+                      type="number"
+                      placeholder="10"
+                      value={formData.maxParticipants}
+                      onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
+                      required
+                      min="1"
+                    />
+                  </label>
+                  <label className={styles.fieldGroup}>
+                    <span>Link Expiry</span>
+                    <input
+                      type="datetime-local"
+                      value={formData.linkExpiry}
+                      onChange={(e) => setFormData({ ...formData, linkExpiry: e.target.value })}
+                      required
+                    />
+                  </label>
+                </div>
                 <div className={styles.formButtons}>
                   <button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? 'Creating…' : 'Create Event'}
@@ -318,16 +517,74 @@ export default function EventsSidebar() {
                   <button
                     type="button"
                     onClick={() => {
-                      setShowCreateForm(false);
+                      setFormData({ ...initialFormState });
                       setCreateStatus(null);
+                      setLocationTouched(false);
                     }}
                     disabled={isSubmitting}
                   >
-                    Cancel
+                    Reset
                   </button>
                 </div>
               </form>
-            )}
+
+              <div className={styles.routePlanner}>
+                <div className={styles.routePlannerHeader}>
+                  <h4>Night Out Planner</h4>
+                  {venues.length > 0 && (
+                    <button
+                      type="button"
+                      className={styles.routeClearButton}
+                      onClick={() => {
+                        clearVenues();
+                        setLocationTouched(false);
+                      }}
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
+                  <p className={styles.routePlannerDescription}>
+                    Stops you add appear here. We’ll optimise the route automatically.
+                  </p>
+                  {venues.length === 0 ? (
+                    <p className={styles.emptyRouteMessage}>
+                      No stops yet—grab a few from the search above to get started.
+                    </p>
+                  ) : (
+                    <>
+                      {hasOptimizedOrder && (
+                        <p className={styles.optimizedHint}>
+                          Order updated for the quickest journey between each stop.
+                        </p>
+                      )}
+                      <ol className={styles.routeList}>
+                        {orderedVenues.map((venue, index) => (
+                          <li key={venue.place_id} className={styles.routeItem}>
+                            <div className={styles.routeItemInfo}>
+                              <span className={styles.routeBadge}>Stop {index + 1}</span>
+                              <div className={styles.routeVenueName}>{venue.name}</div>
+                              <div className={styles.routeVenueAddress}>{venue.address}</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeVenue(venue.place_id)}
+                              className={styles.routeRemoveButton}
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ol>
+                      {venues.length >= 2 && (
+                        <div className={styles.routeMapWrapper}>
+                          <RoutePreviewMap venues={venues} onRouteComputed={handleRouteComputed} />
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+            </div>
 
             {showInviteForm && selectedEvent && (
               <div className={styles.inviteForm}>
@@ -372,16 +629,41 @@ export default function EventsSidebar() {
               </div>
             )}
 
+            {eventStatus && (
+              <div
+                className={`${styles.statusMessage} ${
+                  eventStatus.type === 'success'
+                    ? styles.successMessage
+                    : eventStatus.type === 'warning'
+                      ? styles.warningMessage
+                      : styles.errorMessage
+                }`}
+                role="status"
+              >
+                {eventStatus.message}
+              </div>
+            )}
+
             <div className={styles.eventsList}>
               {events.length === 0 ? (
                 <div className={styles.noEvents}>
                   <p>No events yet. Create your first event!</p>
                 </div>
               ) : (
-                events.map((event) => (
-                  <div key={event.id} className={styles.eventCard}>
-                    <h3>{event.title}</h3>
-                    <p>Date: {new Date(event.date).toLocaleDateString(undefined, {
+                events.map((night) => (
+                  <div key={night.id} className={styles.eventCard}>
+                    <div className={styles.eventCardTopRow}>
+                      <h3>{night.title}</h3>
+                      <button
+                        type="button"
+                        className={styles.deleteEventButton}
+                        onClick={() => handleCancelEvent(night)}
+                        disabled={deletingEventId === night.id}
+                      >
+                        {deletingEventId === night.id ? 'Cancelling…' : 'Cancel Event'}
+                      </button>
+                    </div>
+                    <p>Date: {new Date(night.date).toLocaleDateString(undefined, {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -389,14 +671,13 @@ export default function EventsSidebar() {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}</p>
-                    <p>Location: {event.location}</p>
-                    <p>Participants: {event.current_participants}/{event.max_participants}</p>
+                    <p>Location: {night.location}</p>
+                    <p>Participants: {night.current_participants}/{night.max_participants}</p>
                     <div className={styles.eventActions}>
                       <button
                         onClick={() => {
-                          setSelectedEvent(event);
+                          setSelectedEvent(night);
                           setShowInviteForm(true);
-                          setShowCreateForm(false);
                           setInviteStatus(null);
                         }}
                         className={styles.inviteButton}
@@ -404,14 +685,14 @@ export default function EventsSidebar() {
                         Invite People
                       </button>
                       <button
-                        onClick={() => copyInviteLink(event.invite_link)}
+                        onClick={() => copyInviteLink(night.invite_link)}
                         className={styles.copyLinkButton}
                       >
                         Copy Link
                       </button>
                     </div>
                     <p className={styles.expiryNote}>
-                      Link expires: {new Date(event.link_expiry).toLocaleDateString()}
+                      Link expires: {new Date(night.link_expiry).toLocaleDateString()}
                     </p>
                   </div>
                 ))

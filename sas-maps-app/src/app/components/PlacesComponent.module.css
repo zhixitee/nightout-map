@@ -1,0 +1,279 @@
+.container {
+  padding: 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  position: relative;
+  background: var(--card-bg);
+}
+
+.closeButton {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 5px;
+  color: var(--text-primary);
+}
+
+.title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.searchControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.locationInfo {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.radiusControl {
+  font-size: 0.85rem;
+}
+
+.controlLabel {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.radiusButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.radiusButtons button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  background: var(--control-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.radiusButtons button:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.radiusButtons button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.radiusButtons span {
+  min-width: 30px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.typeControl {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.typeButton {
+  cursor: pointer;
+  background: var(--text-secondary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  line-height: 22px;
+  text-align: center;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.typeButton:hover {
+  transform: scale(1.1);
+}
+
+.typeInfo {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.searchButton {
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.searchButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+}
+
+.searchButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.loadingMessage {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.resultsSection {
+  margin-top: 1rem;
+}
+
+.resultsTitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.resultsList {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resultItem {
+  padding: 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--control-bg);
+  transition: box-shadow 0.2s ease;
+}
+
+.resultItem:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.placeName {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.placeAddress {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.placeRating {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.addButtonWrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.addButton {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.addButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.addedButton {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  cursor: default;
+}
+
+.addedButton:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.overlayCloseButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: inherit;
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+}
+
+.overlayTitle {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: inherit;
+}
+
+.overlayCurrent {
+  margin-bottom: 1rem;
+  color: inherit;
+}
+
+.categorySection {
+  margin-bottom: 1rem;
+}
+
+.categoryTitle {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
+  color: inherit;
+}
+
+.typeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}

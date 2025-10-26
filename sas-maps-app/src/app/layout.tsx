@@ -3,8 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
 import { ThemeProvider } from "@/lib/ThemeContext";
+import { RoutePlannerProvider } from "@/lib/RoutePlannerContext";
+import { MapSearchProvider } from "@/lib/MapSearchContext";
 import Navigation from "./components/Navigation";
 import EventsSidebar from "./components/EventsSidebar/EventsSidebar";
+import ConstellationBackground from "./components/ConstellationBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +36,14 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider>
-            <Navigation />
-            <EventsSidebar />
-            {children}
+            <MapSearchProvider>
+              <RoutePlannerProvider>
+                <ConstellationBackground />
+                <Navigation />
+                <EventsSidebar />
+                {children}
+              </RoutePlannerProvider>
+            </MapSearchProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>
