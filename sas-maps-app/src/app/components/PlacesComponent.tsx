@@ -28,7 +28,7 @@ interface PlacesSearchProps {
   type: string[];
   onPlacesFetched?: (places: PlaceData[]) => void;
   onClose?: () => void;
-  onTypeChange?: (types: string[]) => void; // 1. ADD THIS PROP
+  onTypeChange?: (types: string[]) => void; 
 }
 
 const typeCategories = {
@@ -67,14 +67,14 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   type,
   onPlacesFetched,
   onClose,
-  onTypeChange, // 2. DESTRUCTURE THIS PROP
+  onTypeChange, 
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [results, setResults] = useState<PlaceData[]>([]);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   
   async function storePlaceInDatabase(placeData: PlaceData) {
-    // ... (This function is unchanged)
+   
     try {
       const { data, error } = await supabase
         .from("places")
@@ -108,7 +108,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   }
 
   async function searchPlaces() {
-    // ... (This function is unchanged)
+    
     if (!window.google) {
       console.error("Google Maps API not loaded");
       return;
@@ -198,22 +198,22 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
     }
   }
 
-  // 3. ADD A CLICK HANDLER FOR TYPE BUTTONS
+  
   const handleTypeClick = (typeValue: string) => {
-    if (!onTypeChange) return; // Do nothing if prop isn't passed
+    if (!onTypeChange) return; 
 
     const isSelected = type.includes(typeValue);
     let newTypes: string[];
 
     if (isSelected) {
-      // Remove the type
+      
       newTypes = type.filter(t => t !== typeValue);
     } else {
-      // Add the type
+      
       newTypes = [...type, typeValue];
     }
     
-    onTypeChange(newTypes); // Call the setter function from the parent
+    onTypeChange(newTypes); 
   };
 
 
@@ -238,11 +238,11 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
     width: "90%",
     maxWidth: "500px",
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-    maxHeight: "80vh", // 6. ADD SCROLLING
-    overflowY: "auto",  // 6. ADD SCROLLING
+    maxHeight: "80vh", 
+    overflowY: "auto",  
   };
 
-  // 4. ADD STYLES FOR THE TYPE BUTTONS
+  
   const typeButtonStyles: React.CSSProperties = {
     background: '#f0f0f0',
     border: '1px solid #ccc',
@@ -271,7 +271,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       }}
     >
       {onClose && (
-        // ... (Close button JSX is unchanged)
+        
         <button
           onClick={onClose}
           style={{
@@ -333,7 +333,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       </div>
       <button
         onClick={searchPlaces}
-        // ... (Search button JSX is unchanged)
+        
         disabled={isLoading}
         className={styles.signupButton}
         style={{
@@ -350,7 +350,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       </button>
 
       {isLoading && (
-        // ... (Loading message JSX is unchanged)
+        
         <div style={{ marginTop: "10px", color: "#666" }}>
           Searching for {type.join(", ")} places within{" "}
           {(radius / 1000).toFixed(1)}km radius...
@@ -358,7 +358,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       )}
 
       {results.length > 0 && (
-        // ... (Results list JSX is unchanged)
+        
         <div style={{ marginTop: "15px" }}>
           <h4>Results ({results.length} places stored):</h4>
           <div style={{ maxHeight: "200px", overflowY: "auto" }}>

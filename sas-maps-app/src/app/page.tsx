@@ -1,10 +1,8 @@
 "use client";
-import Image from "next/image";
-import { useState } from "react";
 import MapComponent from "./components/MapComponent";
-import PlacesSearch from "./components/PlacesComponent";
-import type { PlaceData } from "./components/PlacesComponent";
-import styles from "../app/components/Navigation.module.css";
+import PlacesSearch, { PlaceData } from "../app/components/PlacesComponent";
+import { useState } from "react";
+import styles from '../app/components/Navigation.module.css';
 
 export default function Home() {
 
@@ -37,7 +35,6 @@ export default function Home() {
       )}
       </div>
       <MapComponent />
-      
     </div>
   );
 }
