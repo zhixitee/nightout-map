@@ -24,6 +24,17 @@ interface Constellation {
   fullyConnected: boolean;
 }
 
+interface Nebula {
+  x: number;
+  y: number;
+  radius: number;
+  opacity: number;
+  fadeIn: boolean;
+  lifetime: number;
+  color: string;
+  pulsePhase: number;
+}
+
 const CONSTELLATION_PATTERNS = [
   // Orion-like
   {
@@ -96,10 +107,20 @@ const CONSTELLATION_PATTERNS = [
   },
 ];
 
+const NEBULA_COLORS = [
+  { r: 138, g: 43, b: 226 },   // Blue Violet
+  { r: 75, g: 0, b: 130 },     // Indigo
+  { r: 218, g: 112, b: 214 },  // Orchid
+  { r: 147, g: 51, b: 234 },   // Purple
+  { r: 255, g: 105, b: 180 },  // Hot Pink
+  { r: 72, g: 61, b: 139 },    // Dark Slate Blue
+];
+
 export default function ConstellationBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { theme } = useTheme();
   const constellationsRef = useRef<Constellation[]>([]);
+  const nebulaeRef = useRef<Nebula[]>([]);
   const animationFrameRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -116,6 +137,20 @@ export default function ConstellationBackground() {
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+
+    const createNebula = (): Nebula => {
+      const colorData = NEBULA_COLORS[Math.floor(Math.random() * NEBULA_COLORS.length)];
+      return {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 100 + Math.random() * 150,
+        opacity: 0,
+        fadeIn: true,
+        lifetime: 8000 + Math.random() * 6000,
+        color: `${colorData.r},${colorData.g},${colorData.b}`,
+        pulsePhase: Math.random() * Math.PI * 2,
+      };
+    };
 
     const createConstellation = (): Constellation => {
       const pattern = CONSTELLATION_PATTERNS[Math.floor(Math.random() * CONSTELLATION_PATTERNS.length)];
@@ -144,7 +179,7 @@ export default function ConstellationBackground() {
       };
     };
 
-    // Initialize with a few constellations
+    // Initialize with a few constellations and nebulae
     constellationsRef.current = [
       createConstellation(),
       createConstellation(),
@@ -154,13 +189,70 @@ export default function ConstellationBackground() {
       createConstellation(),
     ];
 
+    nebulaeRef.current = [
+      createNebula(),
+      createNebula(),
+    ];
+
     let lastSpawnTime = Date.now();
+    let lastNebulaSpawnTime = Date.now();
     const spawnInterval = 1000;
+    const nebulaSpawnInterval = 5000;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const now = Date.now();
+
+      // Spawn new nebula periodically
+      if (now - lastNebulaSpawnTime > nebulaSpawnInterval && nebulaeRef.current.length < 4) {
+        nebulaeRef.current.push(createNebula());
+        lastNebulaSpawnTime = now;
+      }
+
+      // Draw nebulae first (behind constellations)
+      nebulaeRef.current = nebulaeRef.current.filter((nebula) => {
+        // Update fade
+        if (nebula.fadeIn) {
+          nebula.opacity += 0.005;
+          if (nebula.opacity >= 0.15) {
+            nebula.fadeIn = false;
+            nebula.lifetime = now + nebula.lifetime;
+          }
+        } else {
+          if (now > nebula.lifetime) {
+            nebula.opacity -= 0.003;
+            if (nebula.opacity <= 0) {
+              return false;
+            }
+          }
+        }
+
+        // Update pulse
+        nebula.pulsePhase += 0.02;
+        const pulse = Math.sin(nebula.pulsePhase) * 0.1 + 0.9;
+
+        // Draw nebula with radial gradient
+        const gradient = ctx.createRadialGradient(
+          nebula.x, nebula.y, 0,
+          nebula.x, nebula.y, nebula.radius * pulse
+        );
+
+        const opacity = theme === 'dark' 
+          ? nebula.opacity * 0.6 
+          : nebula.opacity * 0.4;
+
+        gradient.addColorStop(0, `rgba(${nebula.color}, ${opacity})`);
+        gradient.addColorStop(0.5, `rgba(${nebula.color}, ${opacity * 0.4})`);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(nebula.x, nebula.y, nebula.radius * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        return true;
+      });
 
       // Spawn new constellation periodically
       if (now - lastSpawnTime > spawnInterval && constellationsRef.current.length < 15) {
