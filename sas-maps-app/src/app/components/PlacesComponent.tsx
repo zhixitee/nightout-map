@@ -294,7 +294,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       <h3>Search Places</h3>
 
       <div style={{ marginBottom: "15px" }}>
-        {/* ... (Center and Radius JSX is unchanged) */}
+      
         <div>
           <strong>Center:</strong> {center.lat.toFixed(6)},{" "}
           {center.lng.toFixed(6)}
