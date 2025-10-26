@@ -4,9 +4,11 @@ import { useAuth } from "@/lib/AuthContext";
 import { useTheme } from "@/lib/ThemeContext";
 import Link from "next/link";
 import styles from "./Navigation.module.css";
+import { usePathname } from "next/navigation";
 
 export default function Navigation() {
   const { user, signOut } = useAuth();
+  const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
   const handleSignOut = async () => {
@@ -20,13 +22,23 @@ export default function Navigation() {
   return (
     <nav className={styles.nav}>
       <div className={styles.navContent}>
-        <Link href="/" className={styles.homeLink}>
-          <svg className={styles.homeIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9,22 9,12 15,12 15,22"/>
-          </svg>
-          <span className={styles.homeText}>Home</span>
-        </Link>
+        <div>
+          {pathname !== "/" && (
+            <Link href="/" className={styles.homeLink}>
+              <svg
+                className={styles.homeIcon}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9,22 9,12 15,12 15,22" />
+              </svg>
+              <span className={styles.homeText}>Home</span>
+            </Link>
+          )}
+        </div>
 
         <button onClick={toggleTheme} className={styles.themeToggle}>
           {theme === 'light' ? (
@@ -59,7 +71,10 @@ export default function Navigation() {
                 <Link href="/profile" className={styles.profileLink}>
                   View Profile
                 </Link>
-                <button onClick={handleSignOut} className={styles.signOutButton}>
+                <button
+                  onClick={handleSignOut}
+                  className={styles.signOutButton}
+                >
                   Sign Out
                 </button>
               </div>
