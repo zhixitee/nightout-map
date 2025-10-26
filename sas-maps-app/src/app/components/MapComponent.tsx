@@ -227,11 +227,13 @@ export default function MapComponent({
             center={markerPosition}
             radius={radius}
             options={{
-              strokeColor: "blue",
-              strokeOpacity: 0.1,
+              strokeColor: "cyan",
+              strokeOpacity: 0.0005,
               strokeWeight: 1,
-              fillColor: "blue",
+              fillColor: "cyan",
               fillOpacity: 0.35,
+              zIndex: 1,
+              clickable: false,
               
             }}
           />
