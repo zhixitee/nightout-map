@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
 import { ThemeProvider } from "@/lib/ThemeContext";
 import Navigation from "./components/Navigation";
+import EventsSidebar from "./components/EventsSidebar/EventsSidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             <Navigation />
+            <EventsSidebar />
             {children}
           </ThemeProvider>
         </AuthProvider>

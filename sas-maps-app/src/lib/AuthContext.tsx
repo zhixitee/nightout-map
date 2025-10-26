@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 
 declare const process: {
   env: {
@@ -11,11 +11,6 @@ declare const process: {
     [key: string]: string | undefined;
   };
 };
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-);
 
 interface AuthContextType {
   user: User | null;

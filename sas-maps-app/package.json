@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.7",
+    "@sendgrid/mail": "^8.1.6",
     "@supabase/supabase-js": "^2.76.1",
     "next": "16.0.0",
     "react": "19.2.0",

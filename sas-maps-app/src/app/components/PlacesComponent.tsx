@@ -1,12 +1,6 @@
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import styles from "../components/Navigation.module.css";
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "@/lib/supabaseClient";
 
 export interface PlaceData {
   place_id: string;
