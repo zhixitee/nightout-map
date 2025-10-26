@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  Marker,
+  useJsApiLoader,
+  Circle,
+} from "@react-google-maps/api";
 import LocationOverlay from "./LocationOverlayComponent";
 
 export type PlaceDetails = {
@@ -22,12 +27,14 @@ interface MapComponentProps {
   center: { lat: number; lng: number } | null;
   markerPosition: { lat: number; lng: number } | null;
   onMarkerPositionChange: (position: { lat: number; lng: number }) => void;
+  radius: number;
 }
 
 export default function MapComponent({
   center,
   markerPosition,
   onMarkerPositionChange,
+  radius,
 }: MapComponentProps) {
   const { user, loading, signOut } = useAuth();
   const { theme } = useTheme();
@@ -215,6 +222,21 @@ export default function MapComponent({
             onDragEnd={handleMarkerDragEnd}
           />
         )}
+{markerPosition && (
+          <Circle
+            center={markerPosition}
+            radius={radius}
+            options={{
+              strokeColor: "blue",
+              strokeOpacity: 0.1,
+              strokeWeight: 1,
+              fillColor: "blue",
+              fillOpacity: 0.35,
+              
+            }}
+          />
+        )}
+
       </GoogleMap>
     </div>
   );

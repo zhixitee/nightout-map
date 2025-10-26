@@ -11,7 +11,7 @@ export default function Home() {
     lat: number;
     lng: number;
   } | null>(null);
-  const [radius, setRadius] = useState(5000);
+  const [radius, setRadius] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState(["bar"]);
 
   useEffect(() => {
@@ -82,6 +82,7 @@ export default function Home() {
         center={searchCenter}
         markerPosition={searchCenter}
         onMarkerPositionChange={setSearchCenter}
+        radius={radius}
       />
     </div>
   );
