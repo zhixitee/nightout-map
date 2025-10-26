@@ -26,12 +26,14 @@ export default function PreferencesForm({ initialPreferences, userEmail, onUpdat
         setSaving(true);
 
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('user_preferences')
-                .upsert({
-                    user_id: userEmail,
-                    preferences: preferences
-                });
+                .upsert(
+                    { user_id: userEmail, preferences },
+                    { onConflict: 'user_id' } // prevent duplicate-key error
+                )
+                .select()
+                .maybeSingle(); // return single row or null
 
             if (error) throw error;
             onUpdate(preferences);
@@ -44,22 +46,7 @@ export default function PreferencesForm({ initialPreferences, userEmail, onUpdat
 
     return (
         <form onSubmit={handleSubmit} className={styles.preferencesForm}>
-            <div className={styles.formGroup}>
-                <label htmlFor="partySize">Party Size</label>
-                <select
-                    id="partySize"
-                    value={preferences.partySize}
-                    onChange={(e) => setPreferences({
-                        ...preferences,
-                        partySize: e.target.value as UserPreferences['partySize']
-                    })}
-                >
-                    <option value="solo">Solo</option>
-                    <option value="couple">Couple</option>
-                    <option value="small-group">Small Group (3-6)</option>
-                    <option value="large-group">Large Group (7+)</option>
-                </select>
-            </div>
+           
 
             <div className={styles.formGroup}>
                 <label htmlFor="vibeType">Preferred Vibe</label>
@@ -75,6 +62,39 @@ export default function PreferencesForm({ initialPreferences, userEmail, onUpdat
                     <option value="moderate">Moderate</option>
                     <option value="lively">Lively</option>
                     <option value="party">Party</option>
+                </select>
+            </div>
+             <div className={styles.formGroup}>
+                <label htmlFor="partySize">Party Size</label>
+                <select
+                    id="partySize"
+                    value={preferences.partySize}
+                    onChange={(e) => setPreferences({
+                        ...preferences,
+                        partySize: e.target.value as UserPreferences['partySize']
+                    })}
+                >
+                    <option value="solo">Solo</option>
+                    <option value="couple">Couple</option>
+                    <option value="small-group">Small Group (3-6)</option>
+                    <option value="large-group">Large Group (7+)</option>
+                </select>
+            </div>
+            
+
+            <div className={styles.formGroup}>
+                <label htmlFor="venueType">Venue Type</label>
+                <select
+                    id="venueType"
+                    value={preferences.venueType}
+                    onChange={(e) => setPreferences({
+                        ...preferences,
+                        venueType: e.target.value as UserPreferences['venueType']
+                    })}
+                >
+                    <option value="food-and-drink">Food and Drink</option>
+                    <option value="entretainment">Entretainment</option>
+                    <option value="sport">Sport</option>
                 </select>
             </div>
             <div className={styles.formGroup}>
@@ -93,7 +113,7 @@ export default function PreferencesForm({ initialPreferences, userEmail, onUpdat
                     <option value="luxury">Luxury (£50pp~)</option>
                 </select>
             </div>
-            <div className={styles.formGroup}>
+                        <div className={styles.formGroup}>
                 <label htmlFor="musicPreference">Music Preference</label>
                 <select
                     id="musicPreference"
@@ -109,22 +129,6 @@ export default function PreferencesForm({ initialPreferences, userEmail, onUpdat
                     <option value="quiet">Quiet</option>
                 </select>
             </div>
-            <div className={styles.formGroup}>
-                <label htmlFor="venueType">Venue Type</label>
-                <select
-                    id="venueType"
-                    value={preferences.venueType}
-                    onChange={(e) => setPreferences({
-                        ...preferences,
-                        venueType: e.target.value as UserPreferences['venueType']
-                    })}
-                >
-                    <option value="food-and-drink">Food and Drink</option>
-                    <option value="entretainment">Entretainment</option>
-                    <option value="sport">Sport</option>
-                </select>
-            </div>
-            
 
             
 

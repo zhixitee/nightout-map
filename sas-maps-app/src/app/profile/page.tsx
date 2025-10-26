@@ -118,7 +118,7 @@ export default function ProfilePage() {
               </>
             )}
             {/* Add preferences controls here in the future */}
-            <p className={styles.comingSoon}>Preferences</p>
+            <p className={styles.comingSoon}></p>
           </div>
         </section>
 
