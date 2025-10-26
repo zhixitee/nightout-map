@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import styles from "./PlacesComponent.module.css";
 import { supabase } from "@/lib/supabaseClient";
 import { useRoutePlanner } from "@/lib/RoutePlannerContext";
 import { useTheme } from "@/lib/ThemeContext";
+import {useAuth} from "@/lib/AuthContext";
 
 export interface PlaceData {
   place_id: string;
@@ -34,7 +35,7 @@ interface PlacesSearchProps {
 }
 
 const typeCategories = {
-  Activities: [
+  "Activities": [
     { name: "Bowling", value: "bowling_alley" },
     { name: "Casino", value: "casino" },
     { name: "Event Venue", value: "event_venue" },
@@ -48,12 +49,12 @@ const typeCategories = {
     { name: "Pub", value: "pub" },
     { name: "Restaurant", value: "restaurant" },
   ],
-  Location: [
+  "Location": [
     { name: "Hotel", value: "hotel" },
     { name: "Guest Room", value: "private_guest_room" },
     { name: "Beach", value: "beach" },
   ],
-  Sports: [
+  "Sports": [
     { name: "Arena", value: "arena" },
     { name: "Golf Course", value: "golf_course" },
     { name: "Skating Rink", value: "ice_skating_rink" },
@@ -78,6 +79,62 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const { addVenue, hasVenue } = useRoutePlanner();
   const { theme } = useTheme();
+  const { user } = useAuth();
+  const [UserPreferences, setUserPreferences] = useState<string[]>([]);
+  const [isLoadingPreferences, setIsLoadingPreferences] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchUserPreferences = async () => {
+      if (!user) return;
+      setIsLoadingPreferences(true);
+      try {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('preferences')
+          .eq('user_id', user.email)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching user preferences:', error);
+          return;
+        }
+        if (data && data.preferences) {
+          setUserPreferences(data.preferences.venueType || []);
+        }
+        if (data && data.preferences) {
+          const vt = data.preferences.venueType;
+          if (!vt) {
+            setUserPreferences([]);
+          } else if (Array.isArray(vt)) {
+            setUserPreferences(vt);
+          } else {
+            // single string -> wrap into array
+            setUserPreferences([String(vt)]);
+          }
+        } else {
+          setUserPreferences([]);
+        }
+      } catch (error) {
+        console.error('Error fetching user preferences:', error);
+      } finally {
+        setIsLoadingPreferences(false);
+      }
+    };
+    fetchUserPreferences();
+  }, [user]);
+  const searchWithUserPreferences = async () => {
+    if (!UserPreferences.length) {
+      alert("No venue type preferences found for the user.");
+      return;
+    }
+    if (onTypeChange){
+      onTypeChange(UserPreferences);
+    }
+    await searchPlaces();
+  };
+
+
+
 
   async function storePlaceInDatabase(placeData: PlaceData) {
     try {
@@ -275,6 +332,19 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
     background: theme === 'dark' ? '#1e293b' : '#eee',
     color: theme === 'dark' ? '#64748b' : '#aaa',
   };
+  const preferencesButtonStyle: React.CSSProperties = {
+    background: theme === 'dark' ? '#059669' : '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: "4px",
+    padding: "10px 16px",
+    cursor: UserPreferences.length > 0 ? "pointer" : "not-allowed",
+    fontSize: "14px",
+    fontWeight: "bold",
+    marginLeft: "10px",
+    opacity: UserPreferences.length > 0 ? 1 : 0.6,
+  };
+
 
   return (
     <div className={styles.container}>
@@ -344,7 +414,26 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
           <span className={styles.typeInfo}>
             Current Type(s): <strong>{type.join(", ")}</strong>
           </span>
+          {user && (
+            <button
+              onClick={searchWithUserPreferences}
+              disabled={isLoadingPreferences || UserPreferences.length === 0}
+              style={preferencesButtonStyle}
+              title={UserPreferences.length > 0 ? `Search using your venue type preferences `: "No venue type preferences found"}
+            >
+              {isLoadingPreferences ? "Loading..." : "Use Preferences"}
+            </button>
+            )}
+          
+          
         </div>
+        {user && UserPreferences.length > 0 && (
+          <div className={styles.preferencesInfo}>
+            <small>
+            Your venue type preferences: <strong>{(UserPreferences || []).join(", ")}</strong>
+            </small>
+          </div>
+        )}
       </div>
       <button
         onClick={searchPlaces}
