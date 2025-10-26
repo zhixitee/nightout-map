@@ -485,7 +485,6 @@ export default function EventsSidebar() {
                     placeholder="Share the vibe, meeting point, or dress code"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    required
                   />
                 </label>
                 <div className={styles.fieldRow}>
