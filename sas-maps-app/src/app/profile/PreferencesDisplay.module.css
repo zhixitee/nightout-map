@@ -1,0 +1,15 @@
+.preferencesDisplay {
+  background-color: var(--background-secondary);
+  padding: 20px;
+  border-radius: 8px;
+}
+.preferenceItem {
+  margin-bottom: 15px;
+}
+.preferenceLabel {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.preferenceValue {
+  color: var(--text-secondary);
+}

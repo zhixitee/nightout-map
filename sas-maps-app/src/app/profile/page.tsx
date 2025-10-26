@@ -2,11 +2,43 @@
 
 import { useAuth } from "@/lib/AuthContext";
 import { useRouter } from "next/navigation";
+import { useState, useEffect, use } from "react";
+import { UserPreferences, defaultPreferences } from "./Preferences";
+import { createClient } from "@supabase/supabase-js";
+import PreferencesDisplay from "./PreferencesDisplay";
+import PreferencesSetUp from "./PreferencesSetUp";
 import styles from "./profile.module.css";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function ProfilePage() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const [isEditingPreferences, setIsSettingPreferences] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      loadPreferences();
+    }
+  }, [user]);
+  const loadPreferences = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("user_preferences")
+        .select("preferences")
+        .eq("user_id", user?.email)
+        .single();
+      if (error) throw error;
+      setPreferences(data?.preferences || null);
+    } catch (error) {
+      console.error("Error loading preferences:", error);
+    }
+  };
+
 
   // Redirect to login if not authenticated
   if (!loading && !user) {
@@ -31,6 +63,7 @@ export default function ProfilePage() {
       console.error("Error signing out:", error);
     }
   };
+  
 
   return (
     <div className={styles.profileContainer}>
@@ -60,9 +93,32 @@ export default function ProfilePage() {
 
         <section className={styles.profileSection}>
           <h2>Preferences</h2>
+
           <div className={styles.preferencesList}>
+            {isEditingPreferences ? (
+              <PreferencesSetUp
+                initialPreferences={preferences || undefined}
+                userEmail={user!.email!}
+                onUpdate={(newPrefs) => {
+                  setPreferences(newPrefs);
+                  setIsSettingPreferences(false);
+                }}
+              />
+            ) : (
+              <>
+                {preferences ? (
+                  <PreferencesDisplay preferences={preferences} />
+                ) : (<p>No preferences set.</p>)}
+                <button
+                  onClick={() => setIsSettingPreferences(true)}
+                  className={styles.editPreferencesButton}
+                >
+                  {preferences ? 'Edit Preferences' : 'Set Preferences'}
+                </button>
+              </>
+            )}
             {/* Add preferences controls here in the future */}
-            <p className={styles.comingSoon}>Preferences settings coming soon</p>
+            <p className={styles.comingSoon}>Preferences</p>
           </div>
         </section>
 
