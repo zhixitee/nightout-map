@@ -18,6 +18,7 @@ export default function RoutePreviewMap({ venues, onRouteComputed }: RoutePrevie
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [colorScheme, setColorScheme] = useState<google.maps.ColorScheme | undefined>(undefined);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
   const mapCenter = useMemo(() => {
     if (venues.length === 0) {
@@ -51,7 +52,7 @@ export default function RoutePreviewMap({ venues, onRouteComputed }: RoutePrevie
           return;
         }
 
-        setColorScheme(theme === "dark" ? ColorScheme.DARK : ColorScheme.LIGHT);
+        setColorScheme(theme === "dark" ? ColorScheme.LIGHT : ColorScheme.DARK);
       } catch (error) {
         console.error("Failed to load core library for color scheme:", error);
       }
@@ -63,6 +64,16 @@ export default function RoutePreviewMap({ venues, onRouteComputed }: RoutePrevie
       isMounted = false;
     };
   }, [isLoaded, theme]);
+
+  useEffect(() => {
+    if (!mapInstance || colorScheme === undefined) {
+      return;
+    }
+
+    mapInstance.setOptions({
+      colorScheme,
+    });
+  }, [mapInstance, colorScheme]);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -156,6 +167,8 @@ export default function RoutePreviewMap({ venues, onRouteComputed }: RoutePrevie
         center={mapCenter}
         zoom={13}
         mapContainerStyle={{ width: "100%", height: "220px", borderRadius: "8px" }}
+        onLoad={(map) => setMapInstance(map)}
+        key={`route-map-${theme}`}
         options={{
           disableDefaultUI: true,
           zoomControl: true,

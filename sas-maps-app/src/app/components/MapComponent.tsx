@@ -204,7 +204,7 @@ export default function MapComponent({
           return;
         }
 
-        setColorScheme(theme === "dark" ? ColorScheme.DARK : ColorScheme.LIGHT);
+        setColorScheme(theme === "dark" ? ColorScheme.LIGHT : ColorScheme.DARK);
       } catch (error) {
         console.error("Failed to load core library for color scheme:", error);
       }
@@ -264,6 +264,7 @@ export default function MapComponent({
         onClick={handleMapClick}
         onLoad={onMapLoad}
         options={mapOptions}
+        key={`map-${theme}`}
       >
         {markerPosition && (
           <Marker
