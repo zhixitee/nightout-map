@@ -17,7 +17,7 @@ const MapSearchContext = createContext<MapSearchContextValue | undefined>(undefi
 
 export function MapSearchProvider({ children }: { children: ReactNode }) {
   const [center, setCenterState] = useState<Coordinates>(null);
-  const [radius, setRadiusState] = useState<number>(1000);
+  const [radius, setRadiusState] = useState<number>(0);
   const [selectedTypes, setSelectedTypesState] = useState<string[]>(["bar"]);
 
   const setCenter = useCallback((coords: Coordinates) => {
