@@ -1,39 +1,42 @@
 .profileContainer {
-  max-width: 700px;
+  max-width: 650px;
   margin: 0 auto;
-  padding: 1.5rem;
-  min-height: calc(100vh - 80px);
-  padding-top: 90px;
+  padding: 1rem 1.5rem 2rem;
+  min-height: 100vh;
+  padding-top: 85px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .profileHeader {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   width: 100%;
-  max-width: 700px;
+  max-width: 650px;
 }
 
 .profileAvatar {
-  width: 60px;
-  height: 60px;
+  width: 55px;
+  height: 55px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: white;
+  flex-shrink: 0;
 }
 
 .profileName {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   color: var(--text-primary);
 }
 
@@ -44,11 +47,12 @@
   overflow: hidden;
   border: 1px solid var(--card-border);
   width: 100%;
-  max-width: 700px;
+  max-width: 650px;
+  margin-bottom: 1rem;
 }
 
 .profileSection {
-  padding: 1.25rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--card-border);
 }
 
@@ -58,8 +62,9 @@
 
 .profileSection h2 {
   margin: 0 0 0.75rem 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 .profileInfo {
@@ -72,21 +77,23 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
   background: var(--control-bg);
   border-radius: 6px;
   border: 1px solid var(--card-border);
+  font-size: 0.85rem;
 }
 
 .label {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .value {
   color: var(--text-primary);
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  word-break: break-word;
 }
 
 .preferencesList,
@@ -94,6 +101,9 @@
   background: var(--control-bg);
   border-radius: 6px;
   padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .comingSoon {
@@ -105,19 +115,19 @@
 }
 
 .actions {
-  padding: 1.25rem;
+  padding: 1rem 1.25rem;
   display: flex;
   justify-content: flex-end;
 }
 
 .signOutButton {
-  padding: 0.6rem 1.25rem;
+  padding: 0.6rem 1.15rem;
   background: #dc3545;
   color: white;
   border: none;
   border-radius: 6px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -153,38 +163,81 @@
 
 @media (max-width: 640px) {
   .profileContainer {
-    padding: 1rem;
-    padding-top: 80px;
+    padding: 0.75rem 1rem 1.5rem;
+    padding-top: 75px;
+    max-width: 100%;
   }
 
   .profileHeader {
     flex-direction: column;
     text-align: center;
-    gap: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .profileAvatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
   }
 
   .profileName {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+  }
+
+  .profileSection {
+    padding: 0.9rem 1rem;
+  }
+
+  .profileSection h2 {
+    font-size: 0.95rem;
   }
 
   .infoRow {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  .label,
+  .value {
+    font-size: 0.8rem;
   }
 
   .actions {
-    padding: 1rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .signOutButton {
+    font-size: 0.8rem;
+    padding: 0.55rem 1rem;
+  }
+
+  .editPreferencesButton {
+    font-size: 0.8rem;
+    padding: 0.55rem 1rem;
   }
 }
 .editPreferencesButton {
-  padding: 0.5rem 1rem;
-  background: #007bff;
+  padding: 0.6rem 1.15rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
+  align-self: flex-start;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.editPreferencesButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.editPreferencesButton:active {
+  transform: translateY(0);
 }
