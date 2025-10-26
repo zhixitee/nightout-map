@@ -12,7 +12,7 @@ export default function Home() {
 
   const center = {lat: 55.862422, lng: -4.256248};
   const radius = 5000;
-  const type = "bar";
+  const [selectedTypes, setSelectedTypes] = useState(["bar"]);
 
   const handlePlacesFetched = (places: PlaceData[]) => {
     console.log("Fetched places:", places);
@@ -29,7 +29,8 @@ export default function Home() {
       <PlacesSearch
         center={center}
         radius={radius}
-        type={type}
+        type={selectedTypes}
+        onTypeChange={setSelectedTypes}
         onPlacesFetched={handlePlacesFetched}
         onClose={() => setShowSearchUI(false)}
         />
