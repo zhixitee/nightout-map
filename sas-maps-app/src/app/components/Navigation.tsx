@@ -5,11 +5,23 @@ import { useTheme } from "@/lib/ThemeContext";
 import Link from "next/link";
 import styles from "./Navigation.module.css";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import PlacesSearch from "../components/PlacesComponent";
+import type { PlaceData } from "../components/PlacesComponent";
 
 export default function Navigation() {
   const { user, signOut } = useAuth();
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const [showSearchUI, setShowSearchUI] = useState(false);
+
+  const center = {lat: 55.862422, lng: -4.256248};
+  const radius = 5000;
+  const type = "bar";
+
+  const handlePlacesFetched = (places: PlaceData[]) => {
+    console.log("Fetched places:", places);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -22,7 +34,7 @@ export default function Navigation() {
   return (
     <nav className={styles.nav}>
       <div className={styles.navContent}>
-        <div>
+        <div className={styles.leftSection}>
           {pathname !== "/" && (
             <Link href="/" className={styles.homeLink}>
               <svg
@@ -38,6 +50,26 @@ export default function Navigation() {
               <span className={styles.homeText}>Home</span>
             </Link>
           )}
+          <div className={styles.searchSection}>
+            <button
+              onClick={() => setShowSearchUI(true)}
+              disabled={showSearchUI}
+              className={styles.showPlacesButton}
+            >
+              Show Places Search
+            </button>
+            {showSearchUI && (
+              <div className={styles.placesSearch}>
+                <PlacesSearch
+                  center={center}
+                  radius={radius}
+                  type={type}
+                  onPlacesFetched={handlePlacesFetched}
+                  onClose={() => setShowSearchUI(false)}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         <button onClick={toggleTheme} className={styles.themeToggle}>
