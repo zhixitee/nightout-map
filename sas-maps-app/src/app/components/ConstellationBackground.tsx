@@ -19,6 +19,9 @@ interface Constellation {
   opacity: number;
   fadeIn: boolean;
   lifetime: number;
+  currentConnectionIndex: number;
+  connectionProgress: number;
+  fullyConnected: boolean;
 }
 
 const CONSTELLATION_PATTERNS = [
@@ -134,7 +137,10 @@ export default function ConstellationBackground() {
         connections: pattern.connections as [number, number][],
         opacity: 0,
         fadeIn: true,
-        lifetime: 6000 + Math.random() * 5000,
+        lifetime: 4000 + Math.random() * 4000,
+        currentConnectionIndex: 0,
+        connectionProgress: 0,
+        fullyConnected: false,
       };
     };
 
@@ -144,10 +150,12 @@ export default function ConstellationBackground() {
       createConstellation(),
       createConstellation(),
       createConstellation(),
+      createConstellation(),
+      createConstellation(),
     ];
 
     let lastSpawnTime = Date.now();
-    const spawnInterval = 2500;
+    const spawnInterval = 1000;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -155,22 +163,37 @@ export default function ConstellationBackground() {
       const now = Date.now();
 
       // Spawn new constellation periodically
-      if (now - lastSpawnTime > spawnInterval && constellationsRef.current.length < 8) {
+      if (now - lastSpawnTime > spawnInterval && constellationsRef.current.length < 15) {
         constellationsRef.current.push(createConstellation());
         lastSpawnTime = now;
       }
 
       constellationsRef.current = constellationsRef.current.filter((constellation) => {
-        // Update fade
+        // Update fade and connection progress
         if (constellation.fadeIn) {
-          constellation.opacity += 0.01;
-          if (constellation.opacity >= 0.4) {
+          constellation.opacity += 0.015;
+          if (constellation.opacity >= 0.6) {
             constellation.fadeIn = false;
-            constellation.lifetime = now + constellation.lifetime;
+          }
+        }
+
+        // Animate connections one by one
+        if (!constellation.fullyConnected) {
+          constellation.connectionProgress += 0.03;
+          
+          if (constellation.connectionProgress >= 1) {
+            constellation.connectionProgress = 0;
+            constellation.currentConnectionIndex++;
+            
+            if (constellation.currentConnectionIndex >= constellation.connections.length) {
+              constellation.fullyConnected = true;
+              constellation.lifetime = now + 3000; // Start fade out after 3 seconds
+            }
           }
         } else {
+          // Fade out after fully connected
           if (now > constellation.lifetime) {
-            constellation.opacity -= 0.008;
+            constellation.opacity -= 0.012;
             if (constellation.opacity <= 0) {
               return false;
             }
@@ -189,13 +212,15 @@ export default function ConstellationBackground() {
           }
         });
 
-        // Draw connections
+        // Draw connections one by one
         ctx.strokeStyle = theme === 'dark' 
           ? `rgba(147, 197, 253, ${constellation.opacity * 0.5})` 
           : `rgba(99, 102, 241, ${constellation.opacity * 0.3})`;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.5;
 
-        constellation.connections.forEach(([start, end]) => {
+        // Draw completed connections
+        for (let i = 0; i < constellation.currentConnectionIndex; i++) {
+          const [start, end] = constellation.connections[i];
           const startStar = constellation.stars[start];
           const endStar = constellation.stars[end];
           if (startStar && endStar) {
@@ -204,7 +229,24 @@ export default function ConstellationBackground() {
             ctx.lineTo(endStar.x, endStar.y);
             ctx.stroke();
           }
-        });
+        }
+
+        // Draw current connection in progress
+        if (!constellation.fullyConnected && constellation.currentConnectionIndex < constellation.connections.length) {
+          const [start, end] = constellation.connections[constellation.currentConnectionIndex];
+          const startStar = constellation.stars[start];
+          const endStar = constellation.stars[end];
+          if (startStar && endStar) {
+            const progress = constellation.connectionProgress;
+            const currentX = startStar.x + (endStar.x - startStar.x) * progress;
+            const currentY = startStar.y + (endStar.y - startStar.y) * progress;
+            
+            ctx.beginPath();
+            ctx.moveTo(startStar.x, startStar.y);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+          }
+        }
 
         // Draw stars
         constellation.stars.forEach((star) => {
