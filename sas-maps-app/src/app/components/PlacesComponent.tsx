@@ -33,6 +33,7 @@ interface PlacesSearchProps {
   onClose?: () => void;
   onTypeChange?: (types: string[]) => void;
   onRadiusChange?: (newRadius: number) => void;
+  onPlaceSelect?: (place: PlaceData) => void;
 }
 
 const typeCategories = {
@@ -73,6 +74,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   onClose,
   onTypeChange,
   onRadiusChange,
+  onPlaceSelect
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [results, setResults] = useState<PlaceData[]>([]);
@@ -414,6 +416,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
                   borderBottom: "1px solid #eee",
                   fontSize: "14px",
                 }}
+                onClick={() => onPlaceSelect && onPlaceSelect(place)}
               >
                 <div>
                   <strong>{place.name}</strong>

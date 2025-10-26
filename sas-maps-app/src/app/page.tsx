@@ -40,6 +40,10 @@ export default function Home() {
     console.log("Fetched places:", places);
   };
 
+  const handlePlaceSelect = (place: PlaceData) => {
+    setSearchCenter({ lat: place.lat, lng: place.lng });
+  };
+
   return (
     <div>
       <div
@@ -74,6 +78,7 @@ export default function Home() {
             onPlacesFetched={handlePlacesFetched}
             onClose={() => setShowSearchUI(false)}
             onRadiusChange={setRadius}
+            onPlaceSelect={handlePlaceSelect}
           />
         )}
       </div>
