@@ -2,7 +2,6 @@ import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import styles from "../components/Navigation.module.css";
 
-// Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -22,17 +21,22 @@ export interface PlaceData {
   phone: string | null;
 }
 
+type CSSProperties = {
+  [key: string]: string | number;
+};
+
 interface PlacesSearchProps {
   center: { lat: number; lng: number };
   radius: number;
   type: string[];
   onPlacesFetched?: (places: PlaceData[]) => void;
   onClose?: () => void;
-  onTypeChange?: (types: string[]) => void; 
+  onTypeChange?: (types: string[]) => void;
+  onRadiusChange?: (newRadius: number) => void;
 }
 
 const typeCategories = {
-  "Activities": [
+  Activities: [
     { name: "Bowling", value: "bowling_alley" },
     { name: "Casino", value: "casino" },
     { name: "Event Venue", value: "event_venue" },
@@ -46,19 +50,19 @@ const typeCategories = {
     { name: "Pub", value: "pub" },
     { name: "Restaurant", value: "restaurant" },
   ],
-  "Location": [
+  Location: [
     { name: "Hotel", value: "hotel" },
     { name: "Guest Room", value: "private_guest_room" },
     { name: "Beach", value: "beach" },
   ],
-  "Sports": [
+  Sports: [
     { name: "Arena", value: "arena" },
     { name: "Golf Course", value: "golf_course" },
     { name: "Skating Rink", value: "ice_skating_rink" },
     { name: "Stadium", value: "stadium" },
     { name: "Sports Club", value: "sports_club" },
     { name: "Swimming Pool", value: "swimming_pool" },
-  ]
+  ],
 };
 
 const PlacesSearch: React.FC<PlacesSearchProps> = ({
@@ -67,14 +71,14 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   type,
   onPlacesFetched,
   onClose,
-  onTypeChange, 
+  onTypeChange,
+  onRadiusChange,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [results, setResults] = useState<PlaceData[]>([]);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  
+
   async function storePlaceInDatabase(placeData: PlaceData) {
-   
     try {
       const { data, error } = await supabase
         .from("places")
@@ -108,21 +112,17 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
   }
 
   async function searchPlaces() {
-    
     if (!window.google) {
       console.error("Google Maps API not loaded");
       return;
     }
-
     setIsLoading(true);
     setResults([]);
-
     try {
       const { Place, SearchNearbyRankPreference } =
         (await google.maps.importLibrary(
           "places"
         )) as google.maps.PlacesLibrary;
-
       const request = {
         fields: [
           "displayName",
@@ -144,14 +144,11 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
         maxResultCount: 20,
         rankPreference: SearchNearbyRankPreference.POPULARITY,
       };
-
       const { places } = await Place.searchNearby(request);
       const storedPlaces: PlaceData[] = [];
-
       if (places.length) {
         for (const place of places) {
           if (!place.location) continue;
-
           const placeData: PlaceData = {
             place_id: place.id || "",
             name: place.displayName || "",
@@ -165,7 +162,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
             websiteuri: place.websiteURI || null,
             phone: place.internationalPhoneNumber || null,
           };
-
           try {
             await storePlaceInDatabase(placeData);
             storedPlaces.push(placeData);
@@ -173,12 +169,10 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
             console.error("Failed to store place:", placeData.name, error);
           }
         }
-
         setResults(storedPlaces);
         if (onPlacesFetched) {
           onPlacesFetched(storedPlaces);
         }
-
         console.log(
           `Successfully stored ${storedPlaces.length} places in database`
         );
@@ -198,24 +192,25 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
     }
   }
 
-  
   const handleTypeClick = (typeValue: string) => {
-    if (!onTypeChange) return; 
-
+    if (!onTypeChange) return;
     const isSelected = type.includes(typeValue);
     let newTypes: string[];
-
     if (isSelected) {
-      
-      newTypes = type.filter(t => t !== typeValue);
+      newTypes = type.filter((t) => t !== typeValue);
     } else {
-      
       newTypes = [...type, typeValue];
     }
-    
-    onTypeChange(newTypes); 
+    onTypeChange(newTypes);
   };
 
+  const handleRadiusChange = (incrementInKm: number) => {
+    if (!onRadiusChange) return;
+    const newRadius = radius + incrementInKm * 1000;
+    if (newRadius >= 1000) {
+      onRadiusChange(newRadius);
+    }
+  };
 
   const overlayStyles: React.CSSProperties = {
     position: "fixed",
@@ -229,7 +224,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
     justifyContent: "center",
     zIndex: 1000,
   };
-
   const overlayContentStyles: React.CSSProperties = {
     position: "relative",
     backgroundColor: "white",
@@ -238,26 +232,45 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
     width: "90%",
     maxWidth: "500px",
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-    maxHeight: "80vh", 
-    overflowY: "auto",  
+    maxHeight: "80vh",
+    overflowY: "auto",
   };
-
-  
   const typeButtonStyles: React.CSSProperties = {
-    background: '#f0f0f0',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
-    padding: '8px 12px',
-    margin: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
+    background: "#f0f0f0",
+    border: "1px solid #ccc",
+    borderRadius: "4px",
+    padding: "8px 12px",
+    margin: "4px",
+    cursor: "pointer",
+    fontSize: "14px",
   };
-
   const selectedTypeButtonStyles: React.CSSProperties = {
     ...typeButtonStyles,
-    background: '#1976d2',
-    color: 'white',
-    borderColor: '#1976d2',
+    background: "#1976d2",
+    color: "white",
+    borderColor: "#1976d2",
+  };
+  const radiusButtonStyle: React.CSSProperties = {
+    width: "30px",
+    height: "30px",
+    border: "1px solid #ccc",
+    borderRadius: "50%",
+    background: "#f9f9f9",
+    color: "#333",
+    fontSize: "18px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    lineHeight: "1",
+    padding: 0,
+  };
+  const disabledRadiusButtonStyle: React.CSSProperties = {
+    ...radiusButtonStyle,
+    cursor: "not-allowed",
+    background: "#eee",
+    color: "#aaa",
   };
 
   return (
@@ -271,7 +284,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       }}
     >
       {onClose && (
-        
         <button
           onClick={onClose}
           style={{
@@ -294,16 +306,52 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       <h3>Search Places</h3>
 
       <div style={{ marginBottom: "15px" }}>
-      
         <div>
           <strong>Center:</strong> {center.lat.toFixed(6)},{" "}
           {center.lng.toFixed(6)}
         </div>
-        <div>
-          <strong>Radius:</strong> {(radius / 1000).toFixed(1)} km
+
+        <div style={{ fontSize: "14px", marginTop: "10px" }}>
+          <label
+            style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}
+          >
+            Radius (km):
+          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              type="button"
+              onClick={() => handleRadiusChange(-1)}
+              style={
+                radius <= 1000 ? disabledRadiusButtonStyle : radiusButtonStyle
+              }
+              disabled={radius <= 1000}
+              aria-label="Decrease radius by 1km"
+            >
+              -
+            </button>
+            <span
+              style={{
+                minWidth: "30px",
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "16px",
+              }}
+            >
+              {radius / 1000}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleRadiusChange(1)}
+              style={radiusButtonStyle}
+              aria-label="Increase radius by 1km"
+            >
+              +
+            </button>
+          </div>
         </div>
+
         <div
-          style={{ display: "flex", alignItems: "center", marginTop: "5px" }}
+          style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
         >
           <button
             onClick={() => setIsOverlayOpen(true)}
@@ -325,7 +373,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
           >
             +
           </button>
-
           <span>
             Current Type(s): <strong>{type.join(", ")}</strong>
           </span>
@@ -333,7 +380,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       </div>
       <button
         onClick={searchPlaces}
-        
         disabled={isLoading}
         className={styles.signupButton}
         style={{
@@ -350,7 +396,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       </button>
 
       {isLoading && (
-        
         <div style={{ marginTop: "10px", color: "#666" }}>
           Searching for {type.join(", ")} places within{" "}
           {(radius / 1000).toFixed(1)}km radius...
@@ -358,7 +403,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
       )}
 
       {results.length > 0 && (
-        
         <div style={{ marginTop: "15px" }}>
           <h4>Results ({results.length} places stored):</h4>
           <div style={{ maxHeight: "200px", overflowY: "auto" }}>
@@ -385,7 +429,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
         </div>
       )}
 
-      {/* 5. UPDATE THE OVERLAY CONTENT */}
       {isOverlayOpen && (
         <div style={overlayStyles} onClick={() => setIsOverlayOpen(false)}>
           <div
@@ -407,24 +450,34 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
             >
               &times;
             </button>
-            
-            <h2 style={{ marginTop: '0' }}>Select Types</h2>
-            <p>Current: <strong>{type.join(', ') || 'None'}</strong></p>
 
-            {/* Map over the categories and render the buttons */}
+            <h2 style={{ marginTop: "0" }}>Select Types</h2>
+            <p>
+              Current: <strong>{type.join(", ") || "None"}</strong>
+            </p>
+
             {Object.entries(typeCategories).map(([category, items]) => (
-              <div key={category} style={{ marginBottom: '15px' }}>
-                <h4 style={{ borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+              <div key={category} style={{ marginBottom: "15px" }}>
+                <h4
+                  style={{
+                    borderBottom: "1px solid #eee",
+                    paddingBottom: "5px",
+                  }}
+                >
                   {category}
                 </h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                  {items.map(item => {
+                <div style={{ display: "flex", flexWrap: "wrap" }}>
+                  {items.map((item) => {
                     const isSelected = type.includes(item.value);
                     return (
                       <button
                         key={item.value}
                         onClick={() => handleTypeClick(item.value)}
-                        style={isSelected ? selectedTypeButtonStyles : typeButtonStyles}
+                        style={
+                          isSelected
+                            ? selectedTypeButtonStyles
+                            : typeButtonStyles
+                        }
                       >
                         {item.name}
                       </button>
@@ -433,7 +486,6 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
                 </div>
               </div>
             ))}
-
           </div>
         </div>
       )}
