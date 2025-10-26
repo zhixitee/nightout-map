@@ -359,7 +359,7 @@ const PlacesSearch: React.FC<PlacesSearchProps> = ({
             onClick={() => setIsOverlayOpen(true)}
             style={{
               cursor: "pointer",
-              background: "#1976d2",
+              background: "grey",
               color: "white",
               border: "none",
               borderRadius: "50%",
